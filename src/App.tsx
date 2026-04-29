@@ -35,8 +35,8 @@ function App() {
       <WallAssemblyViewer
         data={demoWall}
         phase={phase}
-        widthMm={2600}
-        heightMm={1600}
+        widthMm={6000}
+        heightMm={2800}
         minVisualThicknessMm={24}
       />
     </main>
