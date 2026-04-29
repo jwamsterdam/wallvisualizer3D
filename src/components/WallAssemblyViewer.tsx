@@ -43,6 +43,12 @@ type ComparisonLayer = WallLayer & {
   centerVisualMm: number;
 };
 
+type RoomSurfacesProps = {
+  width: number;
+  height: number;
+  depth: number;
+};
+
 function makeNoiseTexture(color: string, textureName = 'default') {
   const canvas = document.createElement('canvas');
   canvas.width = 96;
@@ -79,6 +85,48 @@ function makeNoiseTexture(color: string, textureName = 'default') {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(2, 2);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function makeInfinitySurfaceTexture(
+  baseColor: string,
+  fadeToColor: string,
+  direction: 'floor' | 'ceiling' | 'wall',
+) {
+  const canvas = document.createElement('canvas');
+  canvas.width = direction === 'wall' ? 512 : 64;
+  canvas.height = direction === 'wall' ? 64 : 512;
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    return null;
+  }
+
+  const gradient =
+    direction === 'wall'
+      ? context.createLinearGradient(0, 0, canvas.width, 0)
+      : context.createLinearGradient(0, 0, 0, canvas.height);
+  if (direction === 'floor') {
+    gradient.addColorStop(0, fadeToColor);
+    gradient.addColorStop(0.22, baseColor);
+    gradient.addColorStop(1, baseColor);
+  } else if (direction === 'ceiling') {
+    gradient.addColorStop(0, baseColor);
+    gradient.addColorStop(0.78, baseColor);
+    gradient.addColorStop(1, fadeToColor);
+  } else {
+    gradient.addColorStop(0, '#e7ecef');
+    gradient.addColorStop(0.18, baseColor);
+    gradient.addColorStop(1, fadeToColor);
+  }
+
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.needsUpdate = true;
   return texture;
 }
@@ -120,7 +168,7 @@ const SolidBlock = memo(function SolidBlock({
 
   return (
     <group>
-      <mesh position={[x, height / 2, z]} castShadow receiveShadow>
+      <mesh position={[x, height / 2, z]}>
         <boxGeometry args={[width, height, depth]} />
         <meshStandardMaterial
           color={color}
@@ -133,7 +181,7 @@ const SolidBlock = memo(function SolidBlock({
       </mesh>
       <lineSegments position={[x, height / 2, z]}>
         <edgesGeometry args={[new THREE.BoxGeometry(width, height, depth)]} />
-        <lineBasicMaterial color="#2b2f35" transparent opacity={0.28} />
+        <lineBasicMaterial color="#2b2f35" transparent opacity={0.22} />
       </lineSegments>
       {showLabel ? (
         <Html
@@ -149,6 +197,54 @@ const SolidBlock = memo(function SolidBlock({
     </group>
   );
 });
+
+function RoomSurfaces({ width, height, depth }: RoomSurfacesProps) {
+  const roomDepth = Math.max(depth + 95, 110);
+  const roomWidth = Math.max(width + 70, 120);
+  const centerZ = depth / 2 + roomDepth * 0.43;
+  const floorMap = useMemo(() => makeInfinitySurfaceTexture('#dde3e7', '#f3f6f8', 'floor'), []);
+  const ceilingMap = useMemo(() => makeInfinitySurfaceTexture('#f7f8f8', '#f3f6f8', 'ceiling'), []);
+  const returnWallMap = useMemo(
+    () => makeInfinitySurfaceTexture('#eef2f4', '#f3f6f8', 'wall'),
+    [],
+  );
+  const returnWallX = width / 2 + 0.02;
+
+  return (
+    <group>
+      <mesh position={[0, -0.035, centerZ]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[roomWidth, roomDepth]} />
+        <meshStandardMaterial
+          color="#ffffff"
+          map={floorMap ?? undefined}
+          roughness={0.86}
+          metalness={0}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh position={[0, height + 0.035, centerZ]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[roomWidth, roomDepth]} />
+        <meshStandardMaterial
+          color="#ffffff"
+          map={ceilingMap ?? undefined}
+          roughness={0.9}
+          metalness={0}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh position={[returnWallX, height / 2, centerZ]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[roomDepth, height]} />
+        <meshStandardMaterial
+          color="#ffffff"
+          map={returnWallMap ?? undefined}
+          roughness={0.88}
+          metalness={0}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  );
+}
 
 function Scene({
   data,
@@ -272,10 +368,14 @@ function Scene({
         maxDistance={Math.max(80, maxSceneDimension * 3)}
         target={[0, totalHeight / 2, totalDepth / 2]}
       />
-      <ambientLight intensity={0.75} />
-      <directionalLight position={[9, 12, 8]} intensity={1.25} castShadow />
-      <directionalLight position={[-6, 5, -5]} intensity={0.45} />
-      <gridHelper args={[36, 18, '#a9b1bd', '#d4d9df']} position={[0, -0.02, totalDepth / 2]} />
+      <ambientLight intensity={0.34} />
+      <hemisphereLight args={['#f8fbff', '#8d7962', 0.55]} />
+      <directionalLight
+        position={[12, 18, 14]}
+        intensity={1.55}
+      />
+      <directionalLight position={[-10, 8, -8]} intensity={0.28} color="#dce8f8" />
+      <RoomSurfaces width={totalWidth} height={totalHeight} depth={totalDepth} />
 
       {phase === 1 ? (
         <SolidBlock
@@ -422,7 +522,13 @@ export function WallAssemblyViewer({
   return (
     <div className="wall-viewer">
       <div className="canvas-shell" aria-label="3D constructiewand viewer">
-        <Canvas shadows dpr={[1, 1.8]}>
+        <Canvas
+          dpr={[1, 1.8]}
+          onCreated={({ gl }) => {
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 1.08;
+          }}
+        >
           <color attach="background" args={['#f3f6f8']} />
           <Scene
             data={data}
