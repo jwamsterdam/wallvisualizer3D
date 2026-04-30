@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { WallAssemblyViewer } from './components/WallAssemblyViewer';
 import { demoWall } from './data/demoWall';
+import type { GroundShadowSettings } from './types';
 
 const phases = [
   { value: 1, label: 'Fase 1' },
@@ -10,6 +11,14 @@ const phases = [
 
 function App() {
   const [phase, setPhase] = useState<1 | 2 | 3>(3);
+  const [groundShadow, setGroundShadow] = useState<GroundShadowSettings>({
+    opacity: 0.2,
+    xOffset: -3.1,
+    yOffset: 0.2,
+    blur: 16.2,
+    spread: -1.3,
+    color: '#111111',
+  });
 
   return (
     <main className="app-shell">
@@ -38,6 +47,8 @@ function App() {
         widthMm={6000}
         heightMm={2800}
         minVisualThicknessMm={24}
+        groundShadow={groundShadow}
+        onGroundShadowChange={setGroundShadow}
       />
     </main>
   );

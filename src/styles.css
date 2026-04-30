@@ -149,6 +149,50 @@ h1 {
   border-radius: 4px;
 }
 
+.shadow-controls {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #d8e0e6;
+}
+
+.shadow-slider,
+.shadow-color {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.shadow-slider span,
+.shadow-color span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #495866;
+  font-size: 0.82rem;
+}
+
+.shadow-slider strong,
+.shadow-color strong {
+  color: #1d252d;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.shadow-slider input {
+  width: 100%;
+  accent-color: #25313d;
+}
+
+.shadow-color input {
+  width: 100%;
+  height: 34px;
+  padding: 2px;
+  border: 1px solid #c6d0d8;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
 .viewer-label {
   pointer-events: none;
 }

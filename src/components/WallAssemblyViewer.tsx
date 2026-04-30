@@ -1,14 +1,33 @@
-import { ContactShadows, Environment, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Environment, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { memo, useMemo } from 'react';
 import * as THREE from 'three';
-import type { WallAssemblyInput, WallAssemblyViewerProps, WallLayer } from '../types';
+import type {
+  GroundShadowSettings,
+  WallAssemblyInput,
+  WallAssemblyViewerProps,
+  WallLayer,
+} from '../types';
 import { sectionThickness, visibleLayers } from '../lib/wallGeometry';
 
 const MM_TO_UNIT = 0.012;
 const DEFAULT_WIDTH_MM = 2600;
 const DEFAULT_HEIGHT_MM = 1600;
 const DEFAULT_MIN_VISUAL_THICKNESS_MM = 24;
+const TEXTURE_ANISOTROPY = 8;
+const WALL_TEXTURE_HEIGHT_MM = 2800;
+const WALL_TEXTURE_WIDTH_MM = 1400;
+const BRICK_WIDTH_MM = 210;
+const BRICK_HEIGHT_MM = 65;
+const MORTAR_MM = 10;
+const DEFAULT_GROUND_SHADOW: GroundShadowSettings = {
+  opacity: 0.2,
+  xOffset: -3.1,
+  yOffset: 0.2,
+  blur: 16.2,
+  spread: -1.3,
+  color: '#111111',
+};
 
 type SolidBlockProps = {
   label: string;
@@ -57,10 +76,25 @@ type WallBoxProps = {
   texture?: string;
 };
 
+type GroundOcclusionProps = {
+  width: number;
+  depth: number;
+  centerX: number;
+  centerZ: number;
+  settings: GroundShadowSettings;
+};
+
+type GroundShadowSegment = {
+  width: number;
+  depth: number;
+  centerX: number;
+  centerZ: number;
+};
+
 function makeNoiseTexture(color: string, textureName = 'default') {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
+  canvas.width = 1024;
+  canvas.height = 2048;
   const context = canvas.getContext('2d');
 
   if (!context) {
@@ -72,9 +106,10 @@ function makeNoiseTexture(color: string, textureName = 'default') {
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   if (textureName === 'concrete') {
-    const brickHeight = 23;
-    const brickWidth = 78;
-    const mortar = 3;
+    const pxPerMm = canvas.height / WALL_TEXTURE_HEIGHT_MM;
+    const brickHeight = BRICK_HEIGHT_MM * pxPerMm;
+    const brickWidth = BRICK_WIDTH_MM * pxPerMm;
+    const mortar = MORTAR_MM * pxPerMm;
     context.fillStyle = '#7f837d';
 
     for (let y = 0; y < canvas.height + brickHeight; y += brickHeight) {
@@ -121,18 +156,30 @@ function makeNoiseTexture(color: string, textureName = 'default') {
     context.stroke();
   }
 
+  const bottomShade = context.createLinearGradient(0, canvas.height, 0, canvas.height * 0.76);
+  bottomShade.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
+  bottomShade.addColorStop(0.32, 'rgba(0, 0, 0, 0.11)');
+  bottomShade.addColorStop(0.72, 'rgba(0, 0, 0, 0.035)');
+  bottomShade.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  context.fillStyle = bottomShade;
+  context.fillRect(0, canvas.height * 0.76, canvas.width, canvas.height * 0.24);
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(textureName === 'concrete' ? 9 : 3, textureName === 'concrete' ? 5 : 3);
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.repeat.set(1, 1);
+  texture.anisotropy = TEXTURE_ANISOTROPY;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
   texture.needsUpdate = true;
   return texture;
 }
 
 function makeBumpTexture(textureName = 'default') {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
+  canvas.width = 1024;
+  canvas.height = 2048;
   const context = canvas.getContext('2d');
 
   if (!context) {
@@ -143,9 +190,10 @@ function makeBumpTexture(textureName = 'default') {
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   if (textureName === 'concrete') {
-    const brickHeight = 23;
-    const brickWidth = 78;
-    const mortar = 3;
+    const pxPerMm = canvas.height / WALL_TEXTURE_HEIGHT_MM;
+    const brickHeight = BRICK_HEIGHT_MM * pxPerMm;
+    const brickWidth = BRICK_WIDTH_MM * pxPerMm;
+    const mortar = MORTAR_MM * pxPerMm;
     context.fillStyle = '#4a4a4a';
     for (let y = 0; y < canvas.height + brickHeight; y += brickHeight) {
       const row = Math.floor(y / brickHeight);
@@ -178,8 +226,12 @@ function makeBumpTexture(textureName = 'default') {
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(textureName === 'concrete' ? 9 : 3, textureName === 'concrete' ? 5 : 3);
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.repeat.set(1, 1);
+  texture.anisotropy = TEXTURE_ANISOTROPY;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
   texture.needsUpdate = true;
   return texture;
 }
@@ -210,6 +262,96 @@ function makeAmbientOcclusionTexture() {
   vertical.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
   context.fillStyle = vertical;
   context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function smoothFalloff(value: number) {
+  const t = clamp(value, 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function roundedBoxDistance(localX: number, localZ: number, halfWidth: number, halfDepth: number, radius: number) {
+  const innerHalfWidth = Math.max(0.01, halfWidth - radius);
+  const innerHalfDepth = Math.max(0.01, halfDepth - radius);
+  const qx = Math.abs(localX) - innerHalfWidth;
+  const qz = Math.abs(localZ) - innerHalfDepth;
+  const outsideX = Math.max(qx, 0);
+  const outsideZ = Math.max(qz, 0);
+  const outsideDistance = Math.hypot(outsideX, outsideZ);
+  const insideDistance = Math.min(Math.max(qx, qz), 0);
+  return outsideDistance + insideDistance - radius;
+}
+
+function makeGroundOcclusionAlphaMap(
+  planeWidth: number,
+  planeDepth: number,
+  segments: GroundShadowSegment[],
+  settings: GroundShadowSettings,
+) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 256;
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    return null;
+  }
+
+  context.fillStyle = '#000000';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const blur = Math.max(0.01, settings.blur);
+  const spread = settings.spread;
+
+  const image = context.createImageData(canvas.width, canvas.height);
+  const pixels = image.data;
+
+  for (let y = 0; y < canvas.height; y += 1) {
+    const localZ = (y / (canvas.height - 1) - 0.5) * planeDepth;
+
+    for (let x = 0; x < canvas.width; x += 1) {
+      const localX = (x / (canvas.width - 1) - 0.5) * planeWidth;
+      let alpha = 0;
+
+      for (const segment of segments) {
+        const shadowCenterX = segment.centerX + settings.xOffset;
+        const shadowCenterZ = segment.centerZ + settings.yOffset;
+        const halfShadowWidth = Math.max(0.01, segment.width / 2 + spread);
+        const halfShadowDepth = Math.max(0.01, segment.depth / 2 + spread);
+        const radius = Math.min(Math.max(blur + Math.max(spread, 0), 0.1), halfShadowWidth, halfShadowDepth);
+        const distance = Math.max(
+          0,
+          roundedBoxDistance(
+            localX - shadowCenterX,
+            localZ - shadowCenterZ,
+            halfShadowWidth,
+            halfShadowDepth,
+            radius,
+          ),
+        );
+        const segmentAlpha = smoothFalloff(1 - distance / blur);
+        alpha = Math.max(alpha, segmentAlpha);
+      }
+
+      const value = Math.round(alpha * 255);
+      const index = (y * canvas.width + x) * 4;
+      pixels[index] = value;
+      pixels[index + 1] = value;
+      pixels[index + 2] = value;
+      pixels[index + 3] = 255;
+    }
+  }
+
+  context.putImageData(image, 0, 0);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.ClampToEdgeWrapping;
@@ -279,6 +421,10 @@ function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
   const textureMap = useMemo(() => makeNoiseTexture(color, texture), [color, texture]);
   const aoMap = useMemo(() => makeAmbientOcclusionTexture(), []);
   const bumpMap = useMemo(() => makeBumpTexture(texture), [texture]);
+  const textureRepeatX =
+    texture === 'concrete'
+      ? Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_WIDTH_MM)
+      : Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_HEIGHT_MM);
   const geometry = useMemo(() => {
     const boxGeometry = new THREE.BoxGeometry(width, height, depth);
     const uv = boxGeometry.getAttribute('uv');
@@ -290,6 +436,14 @@ function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
     return boxGeometry;
   }, [depth, height, width]);
   const settings = materialSettings(texture);
+
+  if (textureMap) {
+    textureMap.repeat.set(textureRepeatX, 1);
+  }
+
+  if (bumpMap) {
+    bumpMap.repeat.set(textureRepeatX, 1);
+  }
 
   return (
     <mesh geometry={geometry} castShadow>
@@ -304,6 +458,86 @@ function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
         metalness={settings.metalness}
         transparent={settings.transparent}
         opacity={settings.opacity}
+      />
+    </mesh>
+  );
+}
+
+function GroundOcclusion({
+  width,
+  depth,
+  centerX,
+  centerZ,
+  settings,
+}: GroundOcclusionProps) {
+  const shadowOutset = Math.max(0, settings.spread) + settings.blur;
+  const footprintWidth = width + Math.abs(settings.xOffset) + shadowOutset * 2;
+  const footprintDepth = depth + Math.abs(settings.yOffset) + shadowOutset * 2;
+  const footprintCenterX = centerX + settings.xOffset / 2;
+  const footprintCenterZ = centerZ + settings.yOffset / 2;
+  const occlusionAlphaMap = useMemo(
+    () =>
+      makeGroundOcclusionAlphaMap(
+        footprintWidth,
+        footprintDepth,
+        [{ width, depth, centerX: centerX - footprintCenterX, centerZ: centerZ - footprintCenterZ }],
+        settings,
+      ),
+    [centerX, centerZ, depth, footprintCenterX, footprintCenterZ, footprintDepth, footprintWidth, settings, width],
+  );
+
+  return (
+    <mesh position={[footprintCenterX, 0.018, footprintCenterZ]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+      <planeGeometry args={[footprintWidth, footprintDepth]} />
+      <meshBasicMaterial
+        color={settings.color}
+        alphaMap={occlusionAlphaMap ?? undefined}
+        transparent
+        opacity={settings.opacity}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+function SegmentedGroundOcclusion({
+  width,
+  depth,
+  centerX,
+  centerZ,
+  segments,
+  settings,
+}: GroundOcclusionProps & { segments: GroundShadowSegment[] }) {
+  const shadowOutset = Math.max(0, settings.spread) + settings.blur;
+  const footprintWidth = width + Math.abs(settings.xOffset) + shadowOutset * 2;
+  const footprintDepth = depth + Math.abs(settings.yOffset) + shadowOutset * 2;
+  const footprintCenterX = centerX + settings.xOffset / 2;
+  const footprintCenterZ = centerZ + settings.yOffset / 2;
+  const localSegments = useMemo(
+    () =>
+      segments.map((segment) => ({
+        ...segment,
+        centerX: segment.centerX - footprintCenterX,
+        centerZ: segment.centerZ - footprintCenterZ,
+      })),
+    [footprintCenterX, footprintCenterZ, segments],
+  );
+  const occlusionAlphaMap = useMemo(
+    () => makeGroundOcclusionAlphaMap(footprintWidth, footprintDepth, localSegments, settings),
+    [footprintDepth, footprintWidth, localSegments, settings],
+  );
+
+  return (
+    <mesh position={[footprintCenterX, 0.018, footprintCenterZ]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+      <planeGeometry args={[footprintWidth, footprintDepth]} />
+      <meshBasicMaterial
+        color={settings.color}
+        alphaMap={occlusionAlphaMap ?? undefined}
+        transparent
+        opacity={settings.opacity}
+        depthWrite={false}
+        toneMapped={false}
       />
     </mesh>
   );
@@ -380,8 +614,10 @@ function Scene({
   heightMm,
   showLabels,
   minVisualThicknessMm,
+  groundShadow,
 }: Required<Pick<WallAssemblyViewerProps, 'phase' | 'widthMm' | 'heightMm' | 'showLabels' | 'minVisualThicknessMm'>> & {
   data?: WallAssemblyInput;
+  groundShadow: GroundShadowSettings;
 }) {
   const fallbackThicknessMm = 180;
   const halfWidthMm = widthMm / 2;
@@ -479,7 +715,18 @@ function Scene({
   const totalDepth = Math.max(totalVisualMm, fallbackThicknessMm) * MM_TO_UNIT;
   const maxSceneDimension = Math.max(totalWidth, totalHeight, totalDepth);
   const cameraDistance = maxSceneDimension * 1.25;
-  const contactShadowScale = Math.max(totalWidth + 8, totalDepth + 18);
+  const oldStackVisualDepthMm = data
+    ? visibleLayers(data.existingWall.layers).reduce(
+        (sum, layer) => sum + Math.max(layer.thicknessMm, minVisualThicknessMm),
+        0,
+      )
+    : fallbackThicknessMm;
+  const newStackVisualDepthMm = data
+    ? visibleLayers([...data.existingWall.layers, ...data.newWall.layers]).reduce(
+        (sum, layer) => sum + Math.max(layer.thicknessMm, minVisualThicknessMm),
+        0,
+      )
+    : fallbackThicknessMm;
 
   return (
     <>
@@ -509,15 +756,61 @@ function Scene({
       />
       <directionalLight position={[12, 9, -10]} intensity={0.12} color="#f7fbff" />
       <RoomSurfaces width={totalWidth} height={totalHeight} depth={totalDepth} />
-      <ContactShadows
-        position={[0, 0.012, totalDepth / 2]}
-        opacity={0.36}
-        scale={contactShadowScale}
-        blur={2.4}
-        far={12}
-        resolution={1024}
-        color="#3a3936"
-      />
+
+      {phase === 1 ? (
+        <GroundOcclusion
+          width={totalWidth}
+          depth={fallbackThicknessMm * MM_TO_UNIT}
+          centerX={0}
+          centerZ={(fallbackThicknessMm * MM_TO_UNIT) / 2}
+          settings={groundShadow}
+        />
+      ) : null}
+
+      {phase === 2
+        ? phaseTwoBlocks.map((block) => {
+            const blockWidth = block.widthMm * MM_TO_UNIT;
+            const blockDepth = block.visualThicknessMm * MM_TO_UNIT;
+            const blockCenterX = block.centerXMm * MM_TO_UNIT;
+            const blockCenterZ = blockDepth / 2;
+
+            return (
+              <group key={`ground-ao-${block.id}`}>
+                <GroundOcclusion
+                  width={blockWidth}
+                  depth={blockDepth}
+                  centerX={blockCenterX}
+                  centerZ={blockCenterZ}
+                  settings={groundShadow}
+                />
+              </group>
+            );
+          })
+        : null}
+
+      {phase === 3 ? (
+        <SegmentedGroundOcclusion
+          width={totalWidth}
+          depth={Math.max(oldStackVisualDepthMm, newStackVisualDepthMm) * MM_TO_UNIT}
+          centerX={0}
+          centerZ={(Math.max(oldStackVisualDepthMm, newStackVisualDepthMm) * MM_TO_UNIT) / 2}
+          segments={[
+            {
+              width: halfWidthMm * MM_TO_UNIT,
+              depth: oldStackVisualDepthMm * MM_TO_UNIT,
+              centerX: leftCenterXMm * MM_TO_UNIT,
+              centerZ: (oldStackVisualDepthMm * MM_TO_UNIT) / 2,
+            },
+            {
+              width: halfWidthMm * MM_TO_UNIT,
+              depth: newStackVisualDepthMm * MM_TO_UNIT,
+              centerX: rightCenterXMm * MM_TO_UNIT,
+              centerZ: (newStackVisualDepthMm * MM_TO_UNIT) / 2,
+            },
+          ]}
+          settings={groundShadow}
+        />
+      ) : null}
 
       {phase === 1 ? (
         <SolidBlock
@@ -579,15 +872,24 @@ function formatMm(value: number) {
 function Legend({
   data,
   phase,
+  groundShadow,
+  onGroundShadowChange,
 }: {
   data?: WallAssemblyInput;
   phase: 1 | 2 | 3;
+  groundShadow: GroundShadowSettings;
+  onGroundShadowChange?: (settings: GroundShadowSettings) => void;
 }) {
+  const shadowControls = (
+    <ShadowControls settings={groundShadow} onChange={onGroundShadowChange} />
+  );
+
   if (phase === 1 || !data) {
     return (
       <aside className="legend-panel">
         <h2>Fase 1</h2>
         <p>Een enkel 3D wandblok in de definitieve orientatie.</p>
+        {shadowControls}
       </aside>
     );
   }
@@ -620,6 +922,7 @@ function Legend({
           </div>
         ))}
         <p>Nieuwe situatie bevat ook de bestaande constructie.</p>
+        {shadowControls}
       </aside>
     );
   }
@@ -648,7 +951,67 @@ function Legend({
         );
       })}
       <p>Rechts is de nieuwe situatie inclusief bestaande constructie.</p>
+      {shadowControls}
     </aside>
+  );
+}
+
+function ShadowControls({
+  settings,
+  onChange,
+}: {
+  settings: GroundShadowSettings;
+  onChange?: (settings: GroundShadowSettings) => void;
+}) {
+  const update = (key: Exclude<keyof GroundShadowSettings, 'color'>, value: number) => {
+    onChange?.({ ...settings, [key]: value });
+  };
+
+  const controls: Array<{
+    key: Exclude<keyof GroundShadowSettings, 'color'>;
+    label: string;
+    min: number;
+    max: number;
+    step: number;
+  }> = [
+    { key: 'opacity', label: 'Donkerte', min: 0, max: 0.8, step: 0.01 },
+    { key: 'xOffset', label: 'X-offset', min: -12, max: 12, step: 0.1 },
+    { key: 'yOffset', label: 'Y-offset', min: -12, max: 12, step: 0.1 },
+    { key: 'blur', label: 'Blur', min: 0.1, max: 24, step: 0.1 },
+    { key: 'spread', label: 'Spread', min: -4, max: 12, step: 0.1 },
+  ];
+
+  return (
+    <section className="shadow-controls">
+      <h3>Schaduw tuning</h3>
+      {controls.map((control) => (
+        <label className="shadow-slider" key={control.key}>
+          <span>
+            {control.label}
+            <strong>{settings[control.key].toFixed(control.step < 0.1 ? 2 : 1)}</strong>
+          </span>
+          <input
+            type="range"
+            min={control.min}
+            max={control.max}
+            step={control.step}
+            value={settings[control.key]}
+            onChange={(event) => update(control.key, Number(event.currentTarget.value))}
+          />
+        </label>
+      ))}
+      <label className="shadow-color">
+        <span>
+          Kleur
+          <strong>{settings.color}</strong>
+        </span>
+        <input
+          type="color"
+          value={settings.color}
+          onChange={(event) => onChange?.({ ...settings, color: event.currentTarget.value })}
+        />
+      </label>
+    </section>
   );
 }
 
@@ -660,6 +1023,8 @@ export function WallAssemblyViewer({
   showLegend = true,
   minVisualThicknessMm = DEFAULT_MIN_VISUAL_THICKNESS_MM,
   phase = 3,
+  groundShadow = DEFAULT_GROUND_SHADOW,
+  onGroundShadowChange,
 }: WallAssemblyViewerProps) {
   return (
     <div className="wall-viewer">
@@ -682,10 +1047,18 @@ export function WallAssemblyViewer({
             heightMm={heightMm}
             showLabels={showLabels}
             minVisualThicknessMm={minVisualThicknessMm}
+            groundShadow={groundShadow}
           />
         </Canvas>
       </div>
-      {showLegend ? <Legend data={data} phase={phase} /> : null}
+      {showLegend ? (
+        <Legend
+          data={data}
+          phase={phase}
+          groundShadow={groundShadow}
+          onGroundShadowChange={onGroundShadowChange}
+        />
+      ) : null}
     </div>
   );
 }

@@ -18,6 +18,15 @@ export type WallLayer = {
   visible?: boolean;
 };
 
+export type GroundShadowSettings = {
+  opacity: number;
+  xOffset: number;
+  yOffset: number;
+  blur: number;
+  spread: number;
+  color: string;
+};
+
 export type WallAssemblyViewerProps = {
   data?: WallAssemblyInput;
   widthMm?: number;
@@ -26,4 +35,6 @@ export type WallAssemblyViewerProps = {
   showLegend?: boolean;
   minVisualThicknessMm?: number;
   phase?: 1 | 2 | 3;
+  groundShadow?: GroundShadowSettings;
+  onGroundShadowChange?: (settings: GroundShadowSettings) => void;
 };
