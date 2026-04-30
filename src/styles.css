@@ -17,6 +17,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 button {
@@ -24,11 +25,13 @@ button {
 }
 
 .app-shell {
-  min-height: 100vh;
-  padding: 24px;
+  height: 100vh;
+  min-height: 0;
+  padding: 16px;
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 18px;
+  gap: 12px;
+  overflow: hidden;
 }
 
 .app-header {
@@ -55,19 +58,21 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(2rem, 4vw, 4rem);
+  font-size: clamp(1.7rem, 3.2vw, 3.1rem);
   line-height: 0.98;
 }
 
 .wall-viewer {
   min-height: 0;
+  height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 310px;
   gap: 16px;
 }
 
 .canvas-shell {
-  min-height: 620px;
+  min-height: 0;
+  height: 100%;
   overflow: hidden;
   border: 1px solid #c6d0d8;
   border-radius: 8px;
@@ -86,6 +91,9 @@ h1 {
   align-self: start;
   display: grid;
   gap: 10px;
+  max-height: 100%;
+  min-height: 0;
+  overflow: auto;
 }
 
 .legend-panel h2 {
@@ -338,7 +346,12 @@ h1 {
 
 @media (max-width: 900px) {
   .app-shell {
-    padding: 14px;
+    padding: 12px;
+    overflow: auto;
+  }
+
+  body {
+    overflow: auto;
   }
 
   .app-header {
@@ -351,6 +364,6 @@ h1 {
   }
 
   .canvas-shell {
-    min-height: 520px;
+    min-height: 460px;
   }
 }

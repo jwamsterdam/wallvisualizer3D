@@ -582,9 +582,9 @@ function LayerGroupCallout({
   const width = widthMm * MM_TO_UNIT;
   const height = heightMm * MM_TO_UNIT;
   const labelX = centerX;
-  const labelY = height + 2.25;
+  const labelY = height + 1.35;
   const labelZ = Math.max(...layers.map((layer) => layer.centerVisualMm + layer.visualThicknessMm / 2)) * MM_TO_UNIT + 0.55;
-  const lineEndY = labelY - 0.44;
+  const lineEndY = labelY - 0.32;
   const anchorZ = Math.max(...layers.map((layer) => layer.centerVisualMm + layer.visualThicknessMm / 2)) * MM_TO_UNIT / 2;
 
   return (
@@ -592,7 +592,7 @@ function LayerGroupCallout({
       <Line
         points={[
           [centerX, height, anchorZ],
-          [centerX, height + 0.86, labelZ - 0.22],
+          [centerX, height + 0.52, labelZ - 0.22],
           [labelX, lineEndY, labelZ],
         ]}
         color="#25313d"
