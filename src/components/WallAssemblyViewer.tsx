@@ -1,9 +1,10 @@
 import { Environment, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
-import { memo, useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { memo, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type {
   GroundShadowSettings,
+  SoundMode,
   WallAssemblyInput,
   WallAssemblyViewerProps,
   WallLayer,
@@ -89,6 +90,16 @@ type GroundShadowSegment = {
   depth: number;
   centerX: number;
   centerZ: number;
+};
+
+type SoundWaveOverlayProps = {
+  mode: SoundMode;
+  oldCenterX: number;
+  newCenterX: number;
+  zoneWidth: number;
+  height: number;
+  oldDepth: number;
+  newDepth: number;
 };
 
 function makeNoiseTexture(color: string, textureName = 'default') {
@@ -607,6 +618,75 @@ function RoomSurfaces({ width, height, depth }: RoomSurfacesProps) {
   );
 }
 
+function SoundWaveOverlay({
+  mode,
+  oldCenterX,
+  newCenterX,
+  zoneWidth,
+  height,
+  oldDepth,
+  newDepth,
+}: SoundWaveOverlayProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const waveCount = 8;
+  const activeDepth = mode === 'new' ? newDepth : oldDepth;
+  const activeCenterX = mode === 'new' ? newCenterX : oldCenterX;
+  const sourceZ = activeDepth + 70 * MM_TO_UNIT;
+  const originY = height * 0.5;
+  const maxRadius = Math.min(zoneWidth * 0.48, height * 0.46);
+  const minRadius = maxRadius * 0.08;
+
+  useFrame(({ clock }) => {
+    if (!groupRef.current || mode === 'off') {
+      return;
+    }
+
+    const elapsed = clock.getElapsedTime();
+    groupRef.current.children.forEach((child, index) => {
+      const progress = (elapsed * 0.42 + index / waveCount) % 1;
+      const radius = minRadius + progress * (maxRadius - minRadius);
+      child.scale.setScalar(radius);
+      child.position.y = originY;
+      child.position.z = sourceZ;
+      const material = (child as THREE.Mesh).material;
+
+      if (material instanceof THREE.MeshBasicMaterial) {
+        material.opacity = Math.max(0, 0.34 * (1 - progress));
+      }
+    });
+  });
+
+  if (mode === 'off') {
+    return null;
+  }
+
+  return (
+    <group ref={groupRef} position={[activeCenterX, 0, 0]}>
+      {Array.from({ length: waveCount }).map((_, index) => (
+        <mesh key={index}>
+          <ringGeometry args={[0.92, 1, 96]} />
+          <meshBasicMaterial
+            color={mode === 'new' ? '#3b82f6' : '#f59e0b'}
+            transparent
+            opacity={0.28}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+            blending={THREE.NormalBlending}
+          />
+        </mesh>
+      ))}
+      <Html
+        position={[zoneWidth * 0.34, height * 0.88, sourceZ]}
+        center
+        distanceFactor={13}
+        className="sound-label"
+      >
+        Geluid door {mode === 'new' ? 'nieuwe' : 'oude'} muur
+      </Html>
+    </group>
+  );
+}
+
 function Scene({
   data,
   phase,
@@ -615,9 +695,11 @@ function Scene({
   showLabels,
   minVisualThicknessMm,
   groundShadow,
+  soundMode,
 }: Required<Pick<WallAssemblyViewerProps, 'phase' | 'widthMm' | 'heightMm' | 'showLabels' | 'minVisualThicknessMm'>> & {
   data?: WallAssemblyInput;
   groundShadow: GroundShadowSettings;
+  soundMode: SoundMode;
 }) {
   const fallbackThicknessMm = 180;
   const halfWidthMm = widthMm / 2;
@@ -757,6 +839,16 @@ function Scene({
       <directionalLight position={[12, 9, -10]} intensity={0.12} color="#f7fbff" />
       <RoomSurfaces width={totalWidth} height={totalHeight} depth={totalDepth} />
 
+      <SoundWaveOverlay
+        mode={soundMode}
+        oldCenterX={leftCenterXMm * MM_TO_UNIT}
+        newCenterX={rightCenterXMm * MM_TO_UNIT}
+        zoneWidth={halfWidthMm * MM_TO_UNIT}
+        height={totalHeight}
+        oldDepth={oldStackVisualDepthMm * MM_TO_UNIT}
+        newDepth={newStackVisualDepthMm * MM_TO_UNIT}
+      />
+
       {phase === 1 ? (
         <GroundOcclusion
           width={totalWidth}
@@ -874,14 +966,21 @@ function Legend({
   phase,
   groundShadow,
   onGroundShadowChange,
+  soundMode,
+  onSoundModeChange,
 }: {
   data?: WallAssemblyInput;
   phase: 1 | 2 | 3;
   groundShadow: GroundShadowSettings;
   onGroundShadowChange?: (settings: GroundShadowSettings) => void;
+  soundMode: SoundMode;
+  onSoundModeChange?: (mode: SoundMode) => void;
 }) {
   const shadowControls = (
-    <ShadowControls settings={groundShadow} onChange={onGroundShadowChange} />
+    <>
+      <SoundControls mode={soundMode} onChange={onSoundModeChange} />
+      <ShadowControls settings={groundShadow} onChange={onGroundShadowChange} />
+    </>
   );
 
   if (phase === 1 || !data) {
@@ -956,6 +1055,38 @@ function Legend({
   );
 }
 
+function SoundControls({
+  mode,
+  onChange,
+}: {
+  mode: SoundMode;
+  onChange?: (mode: SoundMode) => void;
+}) {
+  const options: Array<{ value: SoundMode; label: string }> = [
+    { value: 'off', label: 'Uit' },
+    { value: 'old', label: 'Oude muur' },
+    { value: 'new', label: 'Nieuwe muur' },
+  ];
+
+  return (
+    <section className="sound-controls">
+      <h3>Geluid visualisatie</h3>
+      <div className="sound-toggle" role="group" aria-label="Geluid visualisatie">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={mode === option.value ? 'active' : ''}
+            onClick={() => onChange?.(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function ShadowControls({
   settings,
   onChange,
@@ -1025,6 +1156,8 @@ export function WallAssemblyViewer({
   phase = 3,
   groundShadow = DEFAULT_GROUND_SHADOW,
   onGroundShadowChange,
+  soundMode = 'off',
+  onSoundModeChange,
 }: WallAssemblyViewerProps) {
   return (
     <div className="wall-viewer">
@@ -1048,6 +1181,7 @@ export function WallAssemblyViewer({
             showLabels={showLabels}
             minVisualThicknessMm={minVisualThicknessMm}
             groundShadow={groundShadow}
+            soundMode={soundMode}
           />
         </Canvas>
       </div>
@@ -1057,6 +1191,8 @@ export function WallAssemblyViewer({
           phase={phase}
           groundShadow={groundShadow}
           onGroundShadowChange={onGroundShadowChange}
+          soundMode={soundMode}
+          onSoundModeChange={onSoundModeChange}
         />
       ) : null}
     </div>

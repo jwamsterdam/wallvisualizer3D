@@ -27,6 +27,8 @@ export type GroundShadowSettings = {
   color: string;
 };
 
+export type SoundMode = 'off' | 'old' | 'new';
+
 export type WallAssemblyViewerProps = {
   data?: WallAssemblyInput;
   widthMm?: number;
@@ -37,4 +39,6 @@ export type WallAssemblyViewerProps = {
   phase?: 1 | 2 | 3;
   groundShadow?: GroundShadowSettings;
   onGroundShadowChange?: (settings: GroundShadowSettings) => void;
+  soundMode?: SoundMode;
+  onSoundModeChange?: (mode: SoundMode) => void;
 };
