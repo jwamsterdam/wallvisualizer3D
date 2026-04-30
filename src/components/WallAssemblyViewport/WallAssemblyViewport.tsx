@@ -1,16 +1,16 @@
 import { Environment, Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type {
   GroundShadowSettings,
   SoundMode,
   SoundWaveSettings,
   WallAssemblyInput,
-  WallAssemblyViewerProps,
+  WallAssemblyViewportProps,
   WallLayer,
-} from '../types';
-import { visibleLayers } from '../lib/wallGeometry';
+} from '../../types';
+import { visibleLayers } from '../../lib/wallGeometry';
 
 const MM_TO_UNIT = 0.012;
 const DEFAULT_WIDTH_MM = 2600;
@@ -725,7 +725,7 @@ function Scene({
   soundMode,
   soundWave,
   onSoundModeChange,
-}: Required<Pick<WallAssemblyViewerProps, 'widthMm' | 'heightMm' | 'showLabels' | 'minVisualThicknessMm'>> & {
+}: Required<Pick<WallAssemblyViewportProps, 'widthMm' | 'heightMm' | 'showLabels' | 'minVisualThicknessMm'>> & {
   data?: WallAssemblyInput;
   groundShadow: GroundShadowSettings;
   soundMode: SoundMode;
@@ -914,393 +914,55 @@ function formatMm(value: number) {
   return `${Number.isInteger(value) ? value : value.toFixed(1)} mm`;
 }
 
-type SidebarTab = 'settings' | 'composer' | 'simulator';
-
-const sidebarTabs: Array<{ id: SidebarTab; label: string; icon?: 'settings' }> = [
-  { id: 'composer', label: 'Composer' },
-  { id: 'simulator', label: 'Simulator' },
-  { id: 'settings', label: 'Settings', icon: 'settings' },
-];
-
-function GearIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6V20a2 2 0 1 1-4 0v-.08a1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.88.34l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1H4a2 2 0 1 1 0-4h.08a1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.88l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6V4a2 2 0 1 1 4 0v.08a1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.88-.34l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05A1.7 1.7 0 0 0 19.4 9c.17.35.37.68.6 1H20a2 2 0 1 1 0 4h-.08a1.7 1.7 0 0 0-.52 1Z" />
-    </svg>
-  );
-}
-
-function Sidebar({
-  data,
-  activeTab,
-  showLabels,
-  onShowLabelsChange,
-  groundShadow,
-  onGroundShadowChange,
-  soundMode,
-  onSoundModeChange,
-  soundWave,
-  onSoundWaveChange,
-}: {
-  data?: WallAssemblyInput;
-  activeTab: SidebarTab;
-  showLabels: boolean;
-  onShowLabelsChange?: (showLabels: boolean) => void;
-  groundShadow: GroundShadowSettings;
-  onGroundShadowChange?: (settings: GroundShadowSettings) => void;
-  soundMode: SoundMode;
-  onSoundModeChange?: (mode: SoundMode) => void;
-  soundWave: SoundWaveSettings;
-  onSoundWaveChange?: (settings: SoundWaveSettings) => void;
-}) {
-  const existingLayers = data ? visibleLayers(data.existingWall.layers) : [];
-  const newLayers = data ? visibleLayers([...data.existingWall.layers, ...data.newWall.layers]) : [];
-
-  return (
-    <aside className="legend-panel">
-      {activeTab === 'settings' ? (
-        <div className="sidebar-tab-panel" role="tabpanel">
-          <DisplayControls showLabels={showLabels} onShowLabelsChange={onShowLabelsChange} />
-          <SoundControls
-            mode={soundMode}
-            onChange={onSoundModeChange}
-            settings={soundWave}
-            onSettingsChange={onSoundWaveChange}
-          />
-          <ShadowControls settings={groundShadow} onChange={onGroundShadowChange} />
-        </div>
-      ) : null}
-
-      {activeTab === 'composer' ? (
-        <div className="sidebar-tab-panel" role="tabpanel">
-          {data ? (
-            <>
-              {[
-                { id: 'old', title: `${data.existingWall.title} (0-3 m)`, layers: existingLayers },
-                { id: 'new', title: `${data.newWall.title} (3-6 m)`, layers: newLayers },
-              ].map((section) => {
-                return (
-                  <section key={section.id} className="legend-section">
-                    <h3>{section.title}</h3>
-                    {section.layers.map((layer) => (
-                      <div className="legend-row" key={`${section.id}-${layer.id}`}>
-                        <span className="legend-swatch" style={{ background: layer.color }} />
-                        <span>{layer.name}</span>
-                        <strong>{formatMm(layer.thicknessMm)}</strong>
-                      </div>
-                    ))}
-                  </section>
-                );
-              })}
-              <p>Rechts is de nieuwe situatie inclusief bestaande constructie.</p>
-            </>
-          ) : (
-            <p>Geen muuropbouw geladen.</p>
-          )}
-        </div>
-      ) : null}
-
-      {activeTab === 'simulator' ? (
-        <div className="sidebar-tab-panel sidebar-empty" role="tabpanel" aria-label="Simulator">
-          <p>Simulator komt hier.</p>
-        </div>
-      ) : null}
-    </aside>
-  );
-}
-
-function DisplayControls({
-  showLabels,
-  onShowLabelsChange,
-}: {
-  showLabels: boolean;
-  onShowLabelsChange?: (showLabels: boolean) => void;
-}) {
-  return (
-    <section className="display-controls">
-      <h3>Weergave</h3>
-      <label className="toggle-row">
-        <span>Labels tonen</span>
-        <input
-          type="checkbox"
-          checked={showLabels}
-          onChange={(event) => onShowLabelsChange?.(event.currentTarget.checked)}
-        />
-      </label>
-    </section>
-  );
-}
-
-function SoundControls({
-  mode,
-  onChange,
-  settings,
-  onSettingsChange,
-}: {
-  mode: SoundMode;
-  onChange?: (mode: SoundMode) => void;
-  settings: SoundWaveSettings;
-  onSettingsChange?: (settings: SoundWaveSettings) => void;
-}) {
-  const options: Array<{ value: SoundMode; label: string }> = [
-    { value: 'off', label: 'Uit' },
-    { value: 'old', label: 'Oude muur' },
-    { value: 'new', label: 'Nieuwe muur' },
-  ];
-
-  return (
-    <section className="sound-controls">
-      <h3>Geluid visualisatie</h3>
-      <div className="sound-toggle" role="group" aria-label="Geluid visualisatie">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            className={mode === option.value ? 'active' : ''}
-            onClick={() => onChange?.(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-      <label className="shadow-slider">
-        <span>
-          Snelheid
-          <strong>{settings.speed.toFixed(2)}</strong>
-        </span>
-        <input
-          type="range"
-          min={0.08}
-          max={0.8}
-          step={0.01}
-          value={settings.speed}
-          onChange={(event) =>
-            onSettingsChange?.({ ...settings, speed: Number(event.currentTarget.value) })
-          }
-        />
-      </label>
-      <label className="shadow-slider">
-        <span>
-          Z-diepte
-          <strong>{settings.depth.toFixed(1)}</strong>
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={8}
-          step={0.1}
-          value={settings.depth}
-          onChange={(event) =>
-            onSettingsChange?.({ ...settings, depth: Number(event.currentTarget.value) })
-          }
-        />
-      </label>
-      <label className="shadow-slider">
-        <span>
-          Transparantie
-          <strong>{settings.opacity.toFixed(2)}</strong>
-        </span>
-        <input
-          type="range"
-          min={0.02}
-          max={0.8}
-          step={0.01}
-          value={settings.opacity}
-          onChange={(event) =>
-            onSettingsChange?.({ ...settings, opacity: Number(event.currentTarget.value) })
-          }
-        />
-      </label>
-      <label className="shadow-color">
-        <span>
-          Kleur oude muur
-          <strong>{settings.oldColor}</strong>
-        </span>
-        <input
-          type="color"
-          value={settings.oldColor}
-          onChange={(event) =>
-            onSettingsChange?.({ ...settings, oldColor: event.currentTarget.value })
-          }
-        />
-      </label>
-      <label className="shadow-color">
-        <span>
-          Kleur nieuwe muur
-          <strong>{settings.newColor}</strong>
-        </span>
-        <input
-          type="color"
-          value={settings.newColor}
-          onChange={(event) =>
-            onSettingsChange?.({ ...settings, newColor: event.currentTarget.value })
-          }
-        />
-      </label>
-    </section>
-  );
-}
-
-function ShadowControls({
-  settings,
-  onChange,
-}: {
-  settings: GroundShadowSettings;
-  onChange?: (settings: GroundShadowSettings) => void;
-}) {
-  const update = (key: Exclude<keyof GroundShadowSettings, 'color'>, value: number) => {
-    onChange?.({ ...settings, [key]: value });
-  };
-
-  const controls: Array<{
-    key: Exclude<keyof GroundShadowSettings, 'color'>;
-    label: string;
-    min: number;
-    max: number;
-    step: number;
-  }> = [
-    { key: 'opacity', label: 'Donkerte', min: 0, max: 0.8, step: 0.01 },
-    { key: 'xOffset', label: 'X-offset', min: -12, max: 12, step: 0.1 },
-    { key: 'yOffset', label: 'Y-offset', min: -12, max: 12, step: 0.1 },
-    { key: 'blur', label: 'Blur', min: 0.1, max: 24, step: 0.1 },
-    { key: 'spread', label: 'Spread', min: -4, max: 12, step: 0.1 },
-  ];
-
-  return (
-    <section className="shadow-controls">
-      <h3>Schaduw tuning</h3>
-      {controls.map((control) => (
-        <label className="shadow-slider" key={control.key}>
-          <span>
-            {control.label}
-            <strong>{settings[control.key].toFixed(control.step < 0.1 ? 2 : 1)}</strong>
-          </span>
-          <input
-            type="range"
-            min={control.min}
-            max={control.max}
-            step={control.step}
-            value={settings[control.key]}
-            onChange={(event) => update(control.key, Number(event.currentTarget.value))}
-          />
-        </label>
-      ))}
-      <label className="shadow-color">
-        <span>
-          Kleur
-          <strong>{settings.color}</strong>
-        </span>
-        <input
-          type="color"
-          value={settings.color}
-          onChange={(event) => onChange?.({ ...settings, color: event.currentTarget.value })}
-        />
-      </label>
-    </section>
-  );
-}
-
-export function WallAssemblyViewer({
+export function WallAssemblyViewport({
   data,
   widthMm = DEFAULT_WIDTH_MM,
   heightMm = DEFAULT_HEIGHT_MM,
   showLabels = true,
-  onShowLabelsChange,
-  showLegend = true,
   minVisualThicknessMm = DEFAULT_MIN_VISUAL_THICKNESS_MM,
   groundShadow = DEFAULT_GROUND_SHADOW,
-  onGroundShadowChange,
   soundMode = 'off',
   onSoundModeChange,
   soundWave = DEFAULT_SOUND_WAVE,
-  onSoundWaveChange,
-}: WallAssemblyViewerProps) {
-  const [activeTab, setActiveTab] = useState<SidebarTab>('composer');
+}: WallAssemblyViewportProps) {
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
 
   return (
-    <div className="wall-viewer">
-      <div className="canvas-shell" aria-label="3D constructiewand viewer">
-        <Canvas
-          shadows
-          dpr={[1, 1.8]}
-          onPointerDown={(event) => {
-            pointerDownRef.current = { x: event.clientX, y: event.clientY };
-          }}
-          onPointerMissed={(event) => {
-            const pointerDown = pointerDownRef.current;
-            const dragDistance = pointerDown
-              ? Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y)
-              : 0;
+    <Canvas
+      shadows
+      dpr={[1, 1.8]}
+      onPointerDown={(event) => {
+        pointerDownRef.current = { x: event.clientX, y: event.clientY };
+      }}
+      onPointerMissed={(event) => {
+        const pointerDown = pointerDownRef.current;
+        const dragDistance = pointerDown
+          ? Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y)
+          : 0;
 
-            if (dragDistance <= CLICK_DRAG_THRESHOLD_PX) {
-              onSoundModeChange?.('off');
-            }
-          }}
-          onCreated={({ gl }) => {
-            gl.toneMapping = THREE.ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.16;
-            gl.shadowMap.enabled = true;
-            gl.shadowMap.type = THREE.PCFSoftShadowMap;
-          }}
-        >
-          <color attach="background" args={['#f8f8f6']} />
-          <Scene
-            data={data}
-            widthMm={widthMm}
-            heightMm={heightMm}
-            showLabels={showLabels}
-            minVisualThicknessMm={minVisualThicknessMm}
-            groundShadow={groundShadow}
-            soundMode={soundMode}
-            onSoundModeChange={onSoundModeChange}
-            soundWave={soundWave}
-          />
-        </Canvas>
-      </div>
-      {showLegend ? (
-        <div className="sidebar-shell">
-          <div className="sidebar-tabs" role="tablist" aria-label="Viewer sidebar">
-            {sidebarTabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                aria-label={tab.icon === 'settings' ? tab.label : undefined}
-                title={tab.icon === 'settings' ? tab.label : undefined}
-                className={activeTab === tab.id ? 'active' : ''}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.icon === 'settings' ? <GearIcon /> : tab.label}
-              </button>
-            ))}
-          </div>
-          <Sidebar
-            data={data}
-            activeTab={activeTab}
-            showLabels={showLabels}
-            onShowLabelsChange={onShowLabelsChange}
-            groundShadow={groundShadow}
-            onGroundShadowChange={onGroundShadowChange}
-            soundMode={soundMode}
-            onSoundModeChange={onSoundModeChange}
-            soundWave={soundWave}
-            onSoundWaveChange={onSoundWaveChange}
-          />
-        </div>
-      ) : null}
-    </div>
+        if (dragDistance <= CLICK_DRAG_THRESHOLD_PX) {
+          onSoundModeChange?.('off');
+        }
+      }}
+      onCreated={({ gl }) => {
+        gl.toneMapping = THREE.ACESFilmicToneMapping;
+        gl.toneMappingExposure = 1.16;
+        gl.shadowMap.enabled = true;
+        gl.shadowMap.type = THREE.PCFSoftShadowMap;
+      }}
+    >
+      <color attach="background" args={['#f8f8f6']} />
+      <Scene
+        data={data}
+        widthMm={widthMm}
+        heightMm={heightMm}
+        showLabels={showLabels}
+        minVisualThicknessMm={minVisualThicknessMm}
+        groundShadow={groundShadow}
+        soundMode={soundMode}
+        onSoundModeChange={onSoundModeChange}
+        soundWave={soundWave}
+      />
+    </Canvas>
   );
 }

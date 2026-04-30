@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { WallAssemblyViewer } from './components/WallAssemblyViewer';
+import { Sidebar, SidebarTabs, type SidebarTab } from './components/Sidebar';
+import { WallAssemblyViewport } from './components/WallAssemblyViewport';
 import { demoWall } from './data/demoWall';
 import type { GroundShadowSettings, SoundMode, SoundWaveSettings } from './types';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<SidebarTab>('composer');
   const [showLabels, setShowLabels] = useState(true);
   const [groundShadow, setGroundShadow] = useState<GroundShadowSettings>({
     opacity: 0.2,
@@ -31,20 +33,36 @@ function App() {
         </div>
       </header>
 
-      <WallAssemblyViewer
-        data={demoWall}
-        widthMm={6000}
-        heightMm={2800}
-        showLabels={showLabels}
-        onShowLabelsChange={setShowLabels}
-        minVisualThicknessMm={24}
-        groundShadow={groundShadow}
-        onGroundShadowChange={setGroundShadow}
-        soundMode={soundMode}
-        onSoundModeChange={setSoundMode}
-        soundWave={soundWave}
-        onSoundWaveChange={setSoundWave}
-      />
+      <div className="wall-viewer">
+        <div className="canvas-shell" aria-label="3D constructiewand viewer">
+          <WallAssemblyViewport
+            data={demoWall}
+            widthMm={6000}
+            heightMm={2800}
+            showLabels={showLabels}
+            minVisualThicknessMm={24}
+            groundShadow={groundShadow}
+            soundMode={soundMode}
+            onSoundModeChange={setSoundMode}
+            soundWave={soundWave}
+          />
+        </div>
+        <div className="sidebar-shell">
+          <SidebarTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          <Sidebar
+            data={demoWall}
+            activeTab={activeTab}
+            showLabels={showLabels}
+            onShowLabelsChange={setShowLabels}
+            groundShadow={groundShadow}
+            onGroundShadowChange={setGroundShadow}
+            soundMode={soundMode}
+            onSoundModeChange={setSoundMode}
+            soundWave={soundWave}
+            onSoundWaveChange={setSoundWave}
+          />
+        </div>
+      </div>
     </main>
   );
 }

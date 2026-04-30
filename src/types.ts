@@ -37,18 +37,14 @@ export type SoundWaveSettings = {
   newColor: string;
 };
 
-export type WallAssemblyViewerProps = {
+export type WallAssemblyViewportProps = {
   data?: WallAssemblyInput;
   widthMm?: number;
   heightMm?: number;
   showLabels?: boolean;
-  onShowLabelsChange?: (showLabels: boolean) => void;
-  showLegend?: boolean;
   minVisualThicknessMm?: number;
   groundShadow?: GroundShadowSettings;
-  onGroundShadowChange?: (settings: GroundShadowSettings) => void;
   soundMode?: SoundMode;
   onSoundModeChange?: (mode: SoundMode) => void;
   soundWave?: SoundWaveSettings;
-  onSoundWaveChange?: (settings: SoundWaveSettings) => void;
 };
