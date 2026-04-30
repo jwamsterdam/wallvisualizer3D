@@ -59,30 +59,6 @@ h1 {
   line-height: 0.98;
 }
 
-.phase-control {
-  display: flex;
-  gap: 6px;
-  padding: 5px;
-  border: 1px solid #c6d0d8;
-  border-radius: 8px;
-  background: #f8fafb;
-}
-
-.phase-control button {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 6px;
-  color: #41505e;
-  background: transparent;
-  cursor: pointer;
-}
-
-.phase-control button.active {
-  color: #f8fafb;
-  background: #25313d;
-}
-
 .wall-viewer {
   min-height: 0;
   display: grid;
@@ -104,6 +80,12 @@ h1 {
   border: 1px solid #c6d0d8;
   border-radius: 8px;
   background: #f8fafb;
+}
+
+.sidebar-shell {
+  align-self: start;
+  display: grid;
+  gap: 10px;
 }
 
 .legend-panel h2 {
@@ -149,11 +131,79 @@ h1 {
   border-radius: 4px;
 }
 
+.sidebar-tabs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid #c6d0d8;
+  border-radius: 8px;
+  background: #f8fafb;
+}
+
+.sidebar-tabs button {
+  min-height: 34px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 6px;
+  color: #41505e;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.sidebar-tabs button svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.sidebar-tabs button.active {
+  color: #ffffff;
+  background: #25313d;
+}
+
+.sidebar-tab-panel {
+  margin-top: 0;
+}
+
+.sidebar-tab-panel .sound-controls:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.sidebar-empty {
+  min-height: 140px;
+}
+
+.display-controls,
 .sound-controls,
 .shadow-controls {
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid #d8e0e6;
+}
+
+.sidebar-tab-panel .display-controls:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 10px;
+  color: #495866;
+  font-size: 0.86rem;
+}
+
+.toggle-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: #25313d;
 }
 
 .sound-toggle {
@@ -224,28 +274,53 @@ h1 {
   pointer-events: none;
 }
 
-.viewer-label > div,
-.viewer-label span {
+.viewer-label-card {
   display: grid;
-}
-
-.viewer-label span {
-  min-width: 112px;
-  padding: 7px 9px;
-  gap: 2px;
+  min-width: 280px;
+  padding: 15px 17px;
+  gap: 10px;
   border: 1px solid rgb(37 49 61 / 18%);
   border-radius: 6px;
   color: #1f2a35;
-  background: rgb(255 255 255 / 88%);
-  box-shadow: 0 8px 26px rgb(29 37 45 / 12%);
-  font-size: 0.78rem;
-  line-height: 1.2;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 10px 28px rgb(29 37 45 / 16%);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+.viewer-label-card > strong {
+  color: #1d252d;
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.viewer-label-card ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.15em;
+}
+
+.viewer-label-card li {
+  padding-left: 4px;
   white-space: nowrap;
 }
 
-.viewer-label strong {
-  color: #5b6875;
-  font-size: 0.72rem;
+.viewer-label-card li::marker {
+  color: #7b8794;
+  font-weight: 800;
+}
+
+.viewer-label-card li span {
+  margin-right: 12px;
+}
+
+.viewer-label-card li em {
+  color: #566371;
+  font-size: 1.08rem;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .sound-label {
@@ -269,15 +344,6 @@ h1 {
   .app-header {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .phase-control {
-    width: 100%;
-  }
-
-  .phase-control button {
-    flex: 1;
-    padding: 0 8px;
   }
 
   .wall-viewer {

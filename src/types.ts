@@ -42,9 +42,9 @@ export type WallAssemblyViewerProps = {
   widthMm?: number;
   heightMm?: number;
   showLabels?: boolean;
+  onShowLabelsChange?: (showLabels: boolean) => void;
   showLegend?: boolean;
   minVisualThicknessMm?: number;
-  phase?: 1 | 2 | 3;
   groundShadow?: GroundShadowSettings;
   onGroundShadowChange?: (settings: GroundShadowSettings) => void;
   soundMode?: SoundMode;
