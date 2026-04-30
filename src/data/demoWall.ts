@@ -2,7 +2,7 @@ import type { WallAssemblyInput } from '../types';
 
 export const demoWall: WallAssemblyInput = {
   existingWall: {
-    title: 'Oude muur',
+    title: 'Huidige muur',
     layers: [
       {
         id: 'existing-1',
@@ -18,6 +18,15 @@ export const demoWall: WallAssemblyInput = {
   newWall: {
     title: 'Nieuwe muur met voorzetwand',
     layers: [
+      {
+        id: 'new-existing-1',
+        name: 'Kalkzandsteen',
+        material: 'Steenachtig',
+        thicknessMm: 100,
+        color: '#aaa69e',
+        texture: 'concrete',
+        visible: true,
+      },
       {
         id: 'air-gap-1',
         name: 'Luchtspouw',

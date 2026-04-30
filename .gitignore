@@ -3,3 +3,6 @@ dist/
 *.local
 dev-server.log
 *.tsbuildinfo
+.chrome-profile/
+.edge-profile/
+layout-screenshot.png

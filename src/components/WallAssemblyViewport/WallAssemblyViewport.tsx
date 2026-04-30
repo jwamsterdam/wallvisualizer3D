@@ -709,7 +709,7 @@ function SoundWaveOverlay({
         distanceFactor={13}
         className="sound-label"
       >
-        Geluid door {mode === 'new' ? 'nieuwe' : 'oude'} muur
+        Geluid door {mode === 'new' ? 'nieuwe' : 'huidige'} muur
       </Html>
     </group>
   );
@@ -767,12 +767,7 @@ function Scene({
 
     return [
       ...buildStack(data.existingWall.layers, leftCenterXMm, halfWidthMm, 'old'),
-      ...buildStack(
-        [...data.existingWall.layers, ...data.newWall.layers],
-        rightCenterXMm,
-        halfWidthMm,
-        'new',
-      ),
+      ...buildStack(data.newWall.layers, rightCenterXMm, halfWidthMm, 'new'),
     ];
   }, [data, halfWidthMm, leftCenterXMm, minVisualThicknessMm, rightCenterXMm]);
 
@@ -792,7 +787,7 @@ function Scene({
       )
     : fallbackThicknessMm;
   const newStackVisualDepthMm = data
-    ? visibleLayers([...data.existingWall.layers, ...data.newWall.layers]).reduce(
+    ? visibleLayers(data.newWall.layers).reduce(
         (sum, layer) => sum + Math.max(layer.thicknessMm, minVisualThicknessMm),
         0,
       )
@@ -931,6 +926,7 @@ export function WallAssemblyViewport({
     <Canvas
       shadows
       dpr={[1, 1.8]}
+      gl={{ preserveDrawingBuffer: true }}
       onPointerDown={(event) => {
         pointerDownRef.current = { x: event.clientX, y: event.clientY };
       }}

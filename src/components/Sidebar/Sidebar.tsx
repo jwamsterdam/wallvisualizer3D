@@ -1,8 +1,10 @@
 import type {
   GroundShadowSettings,
+  MaterialDefinition,
   SoundMode,
   SoundWaveSettings,
   WallAssemblyInput,
+  WallLayer,
 } from '../../types';
 import { ComposerPanel } from './ComposerPanel';
 import { SettingsPanel } from './SettingsPanel';
@@ -12,8 +14,23 @@ import type { SidebarTab } from './types';
 export type SidebarProps = {
   data?: WallAssemblyInput;
   activeTab: SidebarTab;
+  materials: MaterialDefinition[];
   showLabels: boolean;
   onShowLabelsChange?: (showLabels: boolean) => void;
+  onScreenshot?: () => void;
+  onAddLayer?: (sectionKey: keyof WallAssemblyInput, materialId: string) => void;
+  onChangeLayerMaterial?: (
+    sectionKey: keyof WallAssemblyInput,
+    layerId: string,
+    materialId: string,
+  ) => void;
+  onUpdateLayer?: (
+    sectionKey: keyof WallAssemblyInput,
+    layerId: string,
+    patch: Partial<Pick<WallLayer, 'thicknessMm'>>,
+  ) => void;
+  onRemoveLayer?: (sectionKey: keyof WallAssemblyInput, layerId: string) => void;
+  onMoveLayer?: (sectionKey: keyof WallAssemblyInput, fromIndex: number, toIndex: number) => void;
   groundShadow: GroundShadowSettings;
   onGroundShadowChange?: (settings: GroundShadowSettings) => void;
   soundMode: SoundMode;
@@ -25,8 +42,15 @@ export type SidebarProps = {
 export function Sidebar({
   data,
   activeTab,
+  materials,
   showLabels,
   onShowLabelsChange,
+  onScreenshot,
+  onAddLayer,
+  onChangeLayerMaterial,
+  onUpdateLayer,
+  onRemoveLayer,
+  onMoveLayer,
   groundShadow,
   onGroundShadowChange,
   soundMode,
@@ -40,6 +64,7 @@ export function Sidebar({
         <SettingsPanel
           showLabels={showLabels}
           onShowLabelsChange={onShowLabelsChange}
+          onScreenshot={onScreenshot}
           groundShadow={groundShadow}
           onGroundShadowChange={onGroundShadowChange}
           soundMode={soundMode}
@@ -48,7 +73,17 @@ export function Sidebar({
           onSoundWaveChange={onSoundWaveChange}
         />
       ) : null}
-      {activeTab === 'composer' ? <ComposerPanel data={data} /> : null}
+      {activeTab === 'composer' ? (
+        <ComposerPanel
+          data={data}
+          materials={materials}
+          onAddLayer={onAddLayer}
+          onChangeLayerMaterial={onChangeLayerMaterial}
+          onUpdateLayer={onUpdateLayer}
+          onRemoveLayer={onRemoveLayer}
+          onMoveLayer={onMoveLayer}
+        />
+      ) : null}
       {activeTab === 'simulator' ? <SimulatorPanel /> : null}
     </aside>
   );

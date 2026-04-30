@@ -2,9 +2,37 @@ import { useState } from 'react';
 import { Sidebar, SidebarTabs, type SidebarTab } from './components/Sidebar';
 import { WallAssemblyViewport } from './components/WallAssemblyViewport';
 import { demoWall } from './data/demoWall';
-import type { GroundShadowSettings, SoundMode, SoundWaveSettings } from './types';
+import {
+  applyMaterialToLayer,
+  createLayerFromMaterial,
+  materialLibrary,
+} from './data/materialLibrary';
+import type {
+  GroundShadowSettings,
+  MaterialDefinition,
+  SoundMode,
+  SoundWaveSettings,
+  WallAssemblyInput,
+  WallLayer,
+} from './types';
+
+type WallSectionKey = keyof WallAssemblyInput;
+
+function createLayerId(sectionKey: WallSectionKey, material: MaterialDefinition) {
+  return `${sectionKey}-${material.id}-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 7)}`;
+}
+
+function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
+  const nextItems = [...items];
+  const [movedItem] = nextItems.splice(fromIndex, 1);
+  nextItems.splice(toIndex, 0, movedItem);
+  return nextItems;
+}
 
 function App() {
+  const [wallData, setWallData] = useState<WallAssemblyInput>(demoWall);
   const [activeTab, setActiveTab] = useState<SidebarTab>('composer');
   const [showLabels, setShowLabels] = useState(true);
   const [groundShadow, setGroundShadow] = useState<GroundShadowSettings>({
@@ -24,6 +52,83 @@ function App() {
     newColor: '#3b82f6',
   });
 
+  const updateSectionLayers = (
+    sectionKey: WallSectionKey,
+    updater: (layers: WallLayer[]) => WallLayer[],
+  ) => {
+    setWallData((currentData) => ({
+      ...currentData,
+      [sectionKey]: {
+        ...currentData[sectionKey],
+        layers: updater(currentData[sectionKey].layers),
+      },
+    }));
+  };
+
+  const handleAddLayer = (sectionKey: WallSectionKey, materialId: string) => {
+    const material = materialLibrary.find((item) => item.id === materialId) ?? materialLibrary[0];
+    updateSectionLayers(sectionKey, (layers) => [
+      ...layers,
+      createLayerFromMaterial(material, createLayerId(sectionKey, material)),
+    ]);
+  };
+
+  const handleUpdateLayer = (
+    sectionKey: WallSectionKey,
+    layerId: string,
+    patch: Partial<Pick<WallLayer, 'thicknessMm'>>,
+  ) => {
+    updateSectionLayers(sectionKey, (layers) =>
+      layers.map((layer) => (layer.id === layerId ? { ...layer, ...patch } : layer)),
+    );
+  };
+
+  const handleChangeLayerMaterial = (
+    sectionKey: WallSectionKey,
+    layerId: string,
+    materialId: string,
+  ) => {
+    const material = materialLibrary.find((item) => item.id === materialId);
+
+    if (!material) {
+      return;
+    }
+
+    updateSectionLayers(sectionKey, (layers) =>
+      layers.map((layer) => (layer.id === layerId ? applyMaterialToLayer(layer, material) : layer)),
+    );
+  };
+
+  const handleRemoveLayer = (sectionKey: WallSectionKey, layerId: string) => {
+    updateSectionLayers(sectionKey, (layers) => layers.filter((layer) => layer.id !== layerId));
+  };
+
+  const handleMoveLayer = (sectionKey: WallSectionKey, fromIndex: number, toIndex: number) => {
+    updateSectionLayers(sectionKey, (layers) => {
+      const dropIndex = Math.max(0, Math.min(toIndex, layers.length));
+      const clampedToIndex = fromIndex < dropIndex ? dropIndex - 1 : dropIndex;
+
+      if (fromIndex === clampedToIndex) {
+        return layers;
+      }
+
+      return moveItem(layers, fromIndex, clampedToIndex);
+    });
+  };
+
+  const handleScreenshot = () => {
+    const canvas = document.querySelector<HTMLCanvasElement>('.canvas-shell canvas');
+
+    if (!canvas) {
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = `wandopbouw-${new Date().toISOString().slice(0, 10)}.png`;
+    link.click();
+  };
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -36,7 +141,7 @@ function App() {
       <div className="wall-viewer">
         <div className="canvas-shell" aria-label="3D constructiewand viewer">
           <WallAssemblyViewport
-            data={demoWall}
+            data={wallData}
             widthMm={6000}
             heightMm={2800}
             showLabels={showLabels}
@@ -50,10 +155,17 @@ function App() {
         <div className="sidebar-shell">
           <SidebarTabs activeTab={activeTab} onTabChange={setActiveTab} />
           <Sidebar
-            data={demoWall}
+            data={wallData}
             activeTab={activeTab}
+            materials={materialLibrary}
             showLabels={showLabels}
             onShowLabelsChange={setShowLabels}
+            onScreenshot={handleScreenshot}
+            onAddLayer={handleAddLayer}
+            onChangeLayerMaterial={handleChangeLayerMaterial}
+            onUpdateLayer={handleUpdateLayer}
+            onRemoveLayer={handleRemoveLayer}
+            onMoveLayer={handleMoveLayer}
             groundShadow={groundShadow}
             onGroundShadowChange={setGroundShadow}
             soundMode={soundMode}

@@ -10,7 +10,7 @@ type SoundControlsProps = {
 export function SoundControls({ mode, onChange, settings, onSettingsChange }: SoundControlsProps) {
   const options: Array<{ value: SoundMode; label: string }> = [
     { value: 'off', label: 'Uit' },
-    { value: 'old', label: 'Oude muur' },
+    { value: 'old', label: 'Huidige muur' },
     { value: 'new', label: 'Nieuwe muur' },
   ];
 
@@ -79,7 +79,7 @@ export function SoundControls({ mode, onChange, settings, onSettingsChange }: So
       </label>
       <label className="shadow-color">
         <span>
-          Kleur oude muur
+          Kleur huidige muur
           <strong>{settings.oldColor}</strong>
         </span>
         <input

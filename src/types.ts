@@ -18,6 +18,15 @@ export type WallLayer = {
   visible?: boolean;
 };
 
+export type MaterialDefinition = {
+  id: string;
+  name: string;
+  material: string;
+  defaultThicknessMm: number;
+  color: string;
+  texture?: string;
+};
+
 export type GroundShadowSettings = {
   opacity: number;
   xOffset: number;

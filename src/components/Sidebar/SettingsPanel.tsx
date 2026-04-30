@@ -6,6 +6,7 @@ import { SoundControls } from './SoundControls';
 type SettingsPanelProps = {
   showLabels: boolean;
   onShowLabelsChange?: (showLabels: boolean) => void;
+  onScreenshot?: () => void;
   groundShadow: GroundShadowSettings;
   onGroundShadowChange?: (settings: GroundShadowSettings) => void;
   soundMode: SoundMode;
@@ -17,6 +18,7 @@ type SettingsPanelProps = {
 export function SettingsPanel({
   showLabels,
   onShowLabelsChange,
+  onScreenshot,
   groundShadow,
   onGroundShadowChange,
   soundMode,
@@ -26,7 +28,11 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   return (
     <div className="sidebar-tab-panel" role="tabpanel">
-      <DisplayControls showLabels={showLabels} onShowLabelsChange={onShowLabelsChange} />
+      <DisplayControls
+        showLabels={showLabels}
+        onShowLabelsChange={onShowLabelsChange}
+        onScreenshot={onScreenshot}
+      />
       <SoundControls
         mode={soundMode}
         onChange={onSoundModeChange}

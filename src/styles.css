@@ -27,10 +27,10 @@ button {
 .app-shell {
   height: 100vh;
   min-height: 0;
-  padding: 16px;
+  padding: 12px;
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 12px;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -58,7 +58,7 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(1.7rem, 3.2vw, 3.1rem);
+  font-size: clamp(1.5rem, 2.6vw, 2.4rem);
   line-height: 0.98;
 }
 
@@ -66,8 +66,8 @@ h1 {
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(390px, 34vw);
+  gap: 12px;
 }
 
 .canvas-shell {
@@ -80,20 +80,23 @@ h1 {
 }
 
 .legend-panel {
+  min-width: 0;
   align-self: start;
-  padding: 16px;
+  padding: 14px;
   border: 1px solid #c6d0d8;
   border-radius: 8px;
   background: #f8fafb;
 }
 
 .sidebar-shell {
+  min-width: 0;
   align-self: start;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   max-height: 100%;
   min-height: 0;
   overflow: auto;
+  scrollbar-gutter: stable;
 }
 
 .legend-panel h2 {
@@ -137,6 +140,169 @@ h1 {
   height: 18px;
   border: 1px solid rgb(0 0 0 / 18%);
   border-radius: 4px;
+}
+
+.composer-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.composer-section {
+  display: grid;
+  gap: 8px;
+}
+
+.composer-section h3 {
+  margin: 0;
+}
+
+.composer-section p {
+  margin: -6px 0 0;
+}
+
+.composer-layer-list {
+  display: grid;
+  gap: 6px;
+}
+
+.composer-layer {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px 24px minmax(0, 1fr) 72px 32px;
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid rgb(37 49 61 / 8%);
+  border-radius: 7px;
+  background: rgb(255 255 255 / 92%);
+}
+
+.composer-layer.is-dragging {
+  opacity: 0.52;
+}
+
+.composer-drag-handle {
+  align-self: center;
+  color: #7b8794;
+  cursor: grab;
+  font-weight: 900;
+  letter-spacing: -2px;
+  transform: rotate(90deg);
+}
+
+.composer-layer .legend-swatch {
+  align-self: center;
+  width: 24px;
+  height: 24px;
+}
+
+.composer-drop-indicator {
+  height: 3px;
+  margin: -2px 8px 5px;
+  border-radius: 999px;
+  background: #25313d;
+  box-shadow: 0 0 0 3px rgb(37 49 61 / 10%);
+}
+
+.composer-layer select,
+.composer-add-layer select,
+.composer-layer input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #1d252d;
+  background: #f3f6f8;
+  font: inherit;
+  font-size: 0.96rem;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.composer-layer select:hover,
+.composer-add-layer select:hover,
+.composer-layer input:hover {
+  background: #eef3f6;
+}
+
+.composer-layer select:focus,
+.composer-add-layer select:focus,
+.composer-layer input:focus {
+  outline: 0;
+  border-color: rgb(37 49 61 / 26%);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgb(37 49 61 / 8%);
+}
+
+.composer-layer select,
+.composer-add-layer select {
+  padding: 0 26px 0 9px;
+}
+
+.composer-layer label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.composer-layer label span {
+  color: #667381;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.composer-layer input {
+  padding: 0 9px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  align-self: end;
+  width: 32px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #4d5966;
+  background: #f3f6f8;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.icon-button:hover {
+  color: #25313d;
+  background: #e9eef2;
+}
+
+.composer-add-layer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  align-items: center;
+  gap: 8px;
+}
+
+.composer-add-layer button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  background: #25313d;
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.composer-add-layer button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .sidebar-tabs {
@@ -212,6 +378,23 @@ h1 {
   width: 18px;
   height: 18px;
   accent-color: #25313d;
+}
+
+.secondary-button {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 12px;
+  border: 1px solid rgb(37 49 61 / 10%);
+  border-radius: 6px;
+  color: #25313d;
+  background: #f3f6f8;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.secondary-button:hover {
+  background: #e9eef2;
 }
 
 .sound-toggle {
@@ -361,6 +544,10 @@ h1 {
 
   .wall-viewer {
     grid-template-columns: 1fr;
+  }
+
+  .composer-layer {
+    grid-template-columns: 14px 24px minmax(0, 1fr) 72px 32px;
   }
 
   .canvas-shell {
