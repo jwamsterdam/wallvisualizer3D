@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { WallAssemblyViewer } from './components/WallAssemblyViewer';
 import { demoWall } from './data/demoWall';
-import type { GroundShadowSettings, SoundMode } from './types';
+import type { GroundShadowSettings, SoundMode, SoundWaveSettings } from './types';
 
 const phases = [
   { value: 1, label: 'Fase 1' },
@@ -20,6 +20,13 @@ function App() {
     color: '#111111',
   });
   const [soundMode, setSoundMode] = useState<SoundMode>('off');
+  const [soundWave, setSoundWave] = useState<SoundWaveSettings>({
+    speed: 0.15,
+    depth: 2.4,
+    opacity: 0.8,
+    oldColor: '#f59e0b',
+    newColor: '#3b82f6',
+  });
 
   return (
     <main className="app-shell">
@@ -52,6 +59,8 @@ function App() {
         onGroundShadowChange={setGroundShadow}
         soundMode={soundMode}
         onSoundModeChange={setSoundMode}
+        soundWave={soundWave}
+        onSoundWaveChange={setSoundWave}
       />
     </main>
   );

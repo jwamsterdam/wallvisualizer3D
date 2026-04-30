@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type {
   GroundShadowSettings,
   SoundMode,
+  SoundWaveSettings,
   WallAssemblyInput,
   WallAssemblyViewerProps,
   WallLayer,
@@ -28,6 +29,13 @@ const DEFAULT_GROUND_SHADOW: GroundShadowSettings = {
   blur: 16.2,
   spread: -1.3,
   color: '#111111',
+};
+const DEFAULT_SOUND_WAVE: SoundWaveSettings = {
+  speed: 0.15,
+  depth: 2.4,
+  opacity: 0.8,
+  oldColor: '#f59e0b',
+  newColor: '#3b82f6',
 };
 
 type SolidBlockProps = {
@@ -94,6 +102,7 @@ type GroundShadowSegment = {
 
 type SoundWaveOverlayProps = {
   mode: SoundMode;
+  settings: SoundWaveSettings;
   oldCenterX: number;
   newCenterX: number;
   zoneWidth: number;
@@ -620,6 +629,7 @@ function RoomSurfaces({ width, height, depth }: RoomSurfacesProps) {
 
 function SoundWaveOverlay({
   mode,
+  settings,
   oldCenterX,
   newCenterX,
   zoneWidth,
@@ -635,6 +645,7 @@ function SoundWaveOverlay({
   const originY = height * 0.5;
   const maxRadius = Math.min(zoneWidth * 0.48, height * 0.46);
   const minRadius = maxRadius * 0.08;
+  const waveColor = mode === 'old' ? settings.oldColor : settings.newColor;
 
   useFrame(({ clock }) => {
     if (!groupRef.current || mode === 'off') {
@@ -643,15 +654,15 @@ function SoundWaveOverlay({
 
     const elapsed = clock.getElapsedTime();
     groupRef.current.children.forEach((child, index) => {
-      const progress = (elapsed * 0.42 + index / waveCount) % 1;
+      const progress = (elapsed * settings.speed + index / waveCount) % 1;
       const radius = minRadius + progress * (maxRadius - minRadius);
       child.scale.setScalar(radius);
       child.position.y = originY;
-      child.position.z = sourceZ;
+      child.position.z = sourceZ + progress * settings.depth;
       const material = (child as THREE.Mesh).material;
 
       if (material instanceof THREE.MeshBasicMaterial) {
-        material.opacity = Math.max(0, 0.34 * (1 - progress));
+        material.opacity = Math.max(0, settings.opacity * (1 - progress));
       }
     });
   });
@@ -666,9 +677,9 @@ function SoundWaveOverlay({
         <mesh key={index}>
           <ringGeometry args={[0.92, 1, 96]} />
           <meshBasicMaterial
-            color={mode === 'new' ? '#3b82f6' : '#f59e0b'}
+            color={waveColor}
             transparent
-            opacity={0.28}
+            opacity={settings.opacity}
             depthWrite={false}
             side={THREE.DoubleSide}
             blending={THREE.NormalBlending}
@@ -696,10 +707,12 @@ function Scene({
   minVisualThicknessMm,
   groundShadow,
   soundMode,
+  soundWave,
 }: Required<Pick<WallAssemblyViewerProps, 'phase' | 'widthMm' | 'heightMm' | 'showLabels' | 'minVisualThicknessMm'>> & {
   data?: WallAssemblyInput;
   groundShadow: GroundShadowSettings;
   soundMode: SoundMode;
+  soundWave: SoundWaveSettings;
 }) {
   const fallbackThicknessMm = 180;
   const halfWidthMm = widthMm / 2;
@@ -841,6 +854,7 @@ function Scene({
 
       <SoundWaveOverlay
         mode={soundMode}
+        settings={soundWave}
         oldCenterX={leftCenterXMm * MM_TO_UNIT}
         newCenterX={rightCenterXMm * MM_TO_UNIT}
         zoneWidth={halfWidthMm * MM_TO_UNIT}
@@ -968,6 +982,8 @@ function Legend({
   onGroundShadowChange,
   soundMode,
   onSoundModeChange,
+  soundWave,
+  onSoundWaveChange,
 }: {
   data?: WallAssemblyInput;
   phase: 1 | 2 | 3;
@@ -975,10 +991,17 @@ function Legend({
   onGroundShadowChange?: (settings: GroundShadowSettings) => void;
   soundMode: SoundMode;
   onSoundModeChange?: (mode: SoundMode) => void;
+  soundWave: SoundWaveSettings;
+  onSoundWaveChange?: (settings: SoundWaveSettings) => void;
 }) {
   const shadowControls = (
     <>
-      <SoundControls mode={soundMode} onChange={onSoundModeChange} />
+      <SoundControls
+        mode={soundMode}
+        onChange={onSoundModeChange}
+        settings={soundWave}
+        onSettingsChange={onSoundWaveChange}
+      />
       <ShadowControls settings={groundShadow} onChange={onGroundShadowChange} />
     </>
   );
@@ -1058,9 +1081,13 @@ function Legend({
 function SoundControls({
   mode,
   onChange,
+  settings,
+  onSettingsChange,
 }: {
   mode: SoundMode;
   onChange?: (mode: SoundMode) => void;
+  settings: SoundWaveSettings;
+  onSettingsChange?: (settings: SoundWaveSettings) => void;
 }) {
   const options: Array<{ value: SoundMode; label: string }> = [
     { value: 'off', label: 'Uit' },
@@ -1083,6 +1110,80 @@ function SoundControls({
           </button>
         ))}
       </div>
+      <label className="shadow-slider">
+        <span>
+          Snelheid
+          <strong>{settings.speed.toFixed(2)}</strong>
+        </span>
+        <input
+          type="range"
+          min={0.08}
+          max={0.8}
+          step={0.01}
+          value={settings.speed}
+          onChange={(event) =>
+            onSettingsChange?.({ ...settings, speed: Number(event.currentTarget.value) })
+          }
+        />
+      </label>
+      <label className="shadow-slider">
+        <span>
+          Z-diepte
+          <strong>{settings.depth.toFixed(1)}</strong>
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={8}
+          step={0.1}
+          value={settings.depth}
+          onChange={(event) =>
+            onSettingsChange?.({ ...settings, depth: Number(event.currentTarget.value) })
+          }
+        />
+      </label>
+      <label className="shadow-slider">
+        <span>
+          Transparantie
+          <strong>{settings.opacity.toFixed(2)}</strong>
+        </span>
+        <input
+          type="range"
+          min={0.02}
+          max={0.8}
+          step={0.01}
+          value={settings.opacity}
+          onChange={(event) =>
+            onSettingsChange?.({ ...settings, opacity: Number(event.currentTarget.value) })
+          }
+        />
+      </label>
+      <label className="shadow-color">
+        <span>
+          Kleur oude muur
+          <strong>{settings.oldColor}</strong>
+        </span>
+        <input
+          type="color"
+          value={settings.oldColor}
+          onChange={(event) =>
+            onSettingsChange?.({ ...settings, oldColor: event.currentTarget.value })
+          }
+        />
+      </label>
+      <label className="shadow-color">
+        <span>
+          Kleur nieuwe muur
+          <strong>{settings.newColor}</strong>
+        </span>
+        <input
+          type="color"
+          value={settings.newColor}
+          onChange={(event) =>
+            onSettingsChange?.({ ...settings, newColor: event.currentTarget.value })
+          }
+        />
+      </label>
     </section>
   );
 }
@@ -1158,6 +1259,8 @@ export function WallAssemblyViewer({
   onGroundShadowChange,
   soundMode = 'off',
   onSoundModeChange,
+  soundWave = DEFAULT_SOUND_WAVE,
+  onSoundWaveChange,
 }: WallAssemblyViewerProps) {
   return (
     <div className="wall-viewer">
@@ -1182,6 +1285,7 @@ export function WallAssemblyViewer({
             minVisualThicknessMm={minVisualThicknessMm}
             groundShadow={groundShadow}
             soundMode={soundMode}
+            soundWave={soundWave}
           />
         </Canvas>
       </div>
@@ -1193,6 +1297,8 @@ export function WallAssemblyViewer({
           onGroundShadowChange={onGroundShadowChange}
           soundMode={soundMode}
           onSoundModeChange={onSoundModeChange}
+          soundWave={soundWave}
+          onSoundWaveChange={onSoundWaveChange}
         />
       ) : null}
     </div>
