@@ -42,7 +42,7 @@ export const demoWall: WallAssemblyInput = {
         material: 'Porous fill',
         thicknessMm: 70,
         color: '#d7bd63',
-        texture: 'insulation',
+        texture: '/materials/steenwol/steenwol.png',
         visible: true,
       },
       {

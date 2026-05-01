@@ -23,6 +23,8 @@ const KALKSANDSTONE_TEXTURE_WIDTH_MM = 3000;
 const KALKSANDSTONE_TEXTURE_HEIGHT_MM = 2800;
 const BRICK_TEXTURE_WIDTH_MM = 1100;
 const BRICK_TEXTURE_HEIGHT_MM = 1200;
+const STONE_WOOL_TEXTURE_WIDTH_MM = 1200;
+const STONE_WOOL_TEXTURE_HEIGHT_MM = 1200;
 const BRICK_WIDTH_MM = 210;
 const BRICK_HEIGHT_MM = 65;
 const MORTAR_MM = 10;
@@ -436,6 +438,10 @@ function materialSettings(textureName?: string) {
     return { roughness: 1, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.085 };
   }
 
+  if (textureName?.startsWith('/materials/steenwol/')) {
+    return { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.065 };
+  }
+
   switch (textureName) {
     case 'air':
       return { roughness: 0.46, metalness: 0, transparent: true, opacity: 0.34, bumpScale: 0 };
@@ -458,6 +464,10 @@ function isBaksteenTexture(textureName?: string) {
   return textureName?.startsWith('/materials/baksteen/');
 }
 
+function isStoneWoolTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/steenwol/');
+}
+
 function imageMaterialTint(textureName?: string) {
   if (isKalkzandsteenTexture(textureName)) {
     return '#ffffff';
@@ -469,6 +479,10 @@ function imageMaterialTint(textureName?: string) {
 function imageTextureSizeMm(textureName?: string) {
   if (isBaksteenTexture(textureName)) {
     return { widthMm: BRICK_TEXTURE_WIDTH_MM, heightMm: BRICK_TEXTURE_HEIGHT_MM };
+  }
+
+  if (isStoneWoolTexture(textureName)) {
+    return { widthMm: STONE_WOOL_TEXTURE_WIDTH_MM, heightMm: STONE_WOOL_TEXTURE_HEIGHT_MM };
   }
 
   return { widthMm: KALKSANDSTONE_TEXTURE_WIDTH_MM, heightMm: KALKSANDSTONE_TEXTURE_HEIGHT_MM };
