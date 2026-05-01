@@ -13,7 +13,7 @@ const defaultVisualByType: Record<Material['type'], MaterialVisual> = {
 };
 
 const visualByMaterialId: Record<string, MaterialVisual> = {
-  gipsplaat: { color: '#eee9df', texture: 'gypsum' },
+  gipsplaat: { color: '#eee9df', texture: '/materials/gipsplaat/gipsplaat.png' },
   osb: { color: '#b98b57', texture: 'default' },
   multiplex: { color: '#c79b62', texture: 'default' },
   mdf: { color: '#b3865c', texture: 'default' },
@@ -28,7 +28,7 @@ const visualByMaterialId: Record<string, MaterialVisual> = {
   'steenwol-licht': { color: '#e0c86b', texture: '/materials/steenwol/steenwol.png' },
   'steenwol-middel': { color: '#d7bd63', texture: '/materials/steenwol/steenwol.png' },
   'steenwol-zwaar': { color: '#caa942', texture: '/materials/steenwol/steenwol.png' },
-  glaswol: { color: '#f4d978', texture: 'insulation' },
+  glaswol: { color: '#f4d978', texture: '/materials/glaswol/glaswol.png' },
   gipspleister: { color: '#f0ebe2', texture: 'gypsum' },
   stucwerk: { color: '#f3f0ea', texture: 'gypsum' },
   cementdekvloer: { color: '#aaa9a2', texture: 'concrete' },
