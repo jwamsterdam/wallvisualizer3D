@@ -18,14 +18,21 @@ export type WallLayer = {
   visible?: boolean;
 };
 
-export type MaterialDefinition = {
+export type MaterialType = 'solid_panel' | 'air_gap' | 'porous_fill' | 'thin_layer';
+
+export interface Material {
   id: string;
   name: string;
-  material: string;
-  defaultThicknessMm: number;
-  color: string;
-  texture?: string;
-};
+  type: MaterialType;
+  density?: number;
+  lossFactor?: number;
+  flowResistivity?: number;
+  typicalThicknessesMm: number[];
+  uiCategory: string;
+  notes?: string;
+}
+
+export type MaterialDefinition = Material;
 
 export type GroundShadowSettings = {
   opacity: number;

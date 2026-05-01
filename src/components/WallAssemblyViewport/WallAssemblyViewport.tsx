@@ -1,5 +1,5 @@
 import { Environment, Html, Line, OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { memo, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type {
@@ -19,6 +19,10 @@ const DEFAULT_MIN_VISUAL_THICKNESS_MM = 24;
 const TEXTURE_ANISOTROPY = 8;
 const WALL_TEXTURE_HEIGHT_MM = 2800;
 const WALL_TEXTURE_WIDTH_MM = 1400;
+const KALKSANDSTONE_TEXTURE_WIDTH_MM = 3000;
+const KALKSANDSTONE_TEXTURE_HEIGHT_MM = 2800;
+const BRICK_TEXTURE_WIDTH_MM = 1100;
+const BRICK_TEXTURE_HEIGHT_MM = 1200;
 const BRICK_WIDTH_MM = 210;
 const BRICK_HEIGHT_MM = 65;
 const MORTAR_MM = 10;
@@ -107,6 +111,13 @@ type SoundWaveOverlayProps = {
   height: number;
   oldDepth: number;
   newDepth: number;
+};
+
+type WallMaterialProps = {
+  color: string;
+  texture?: string;
+  textureRepeatX: number;
+  textureRepeatY: number;
 };
 
 function makeNoiseTexture(color: string, textureName = 'default') {
@@ -421,6 +432,10 @@ function makeInfinitySurfaceTexture(
 }
 
 function materialSettings(textureName?: string) {
+  if (textureName?.startsWith('/materials/kalkzandsteen/')) {
+    return { roughness: 1, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.085 };
+  }
+
   switch (textureName) {
     case 'air':
       return { roughness: 0.46, metalness: 0, transparent: true, opacity: 0.34, bumpScale: 0 };
@@ -435,24 +450,82 @@ function materialSettings(textureName?: string) {
   }
 }
 
-function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
+function isKalkzandsteenTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/kalkzandsteen/');
+}
+
+function isBaksteenTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/baksteen/');
+}
+
+function imageMaterialTint(textureName?: string) {
+  if (isKalkzandsteenTexture(textureName)) {
+    return '#ffffff';
+  }
+
+  return '#ffffff';
+}
+
+function imageTextureSizeMm(textureName?: string) {
+  if (isBaksteenTexture(textureName)) {
+    return { widthMm: BRICK_TEXTURE_WIDTH_MM, heightMm: BRICK_TEXTURE_HEIGHT_MM };
+  }
+
+  return { widthMm: KALKSANDSTONE_TEXTURE_WIDTH_MM, heightMm: KALKSANDSTONE_TEXTURE_HEIGHT_MM };
+}
+
+function makeAdjustedImageTexture(source: THREE.Texture, textureName?: string) {
+  if (!isKalkzandsteenTexture(textureName)) {
+    return source.clone();
+  }
+
+  const image = source.image as CanvasImageSource & { width?: number; height?: number };
+  const width = image.width ?? 1024;
+  const height = image.height ?? 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+
+  if (!context) {
+    return source.clone();
+  }
+
+  context.drawImage(image, 0, 0, width, height);
+  const imageData = context.getImageData(0, 0, width, height);
+  const pixels = imageData.data;
+  const contrast = 1;
+  const brightness = 0;
+
+  for (let index = 0; index < pixels.length; index += 4) {
+    for (let channel = 0; channel < 3; channel += 1) {
+      const value = pixels[index + channel];
+      pixels[index + channel] = clamp((value - 128) * contrast + 128 + brightness, 0, 255);
+    }
+  }
+
+  context.putImageData(imageData, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = source.colorSpace;
+  return texture;
+}
+
+function configureWallTexture(texture: THREE.Texture, repeatX: number, repeatY: number) {
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = repeatY > 1.01 ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+  texture.repeat.set(repeatX, repeatY);
+  texture.anisotropy = TEXTURE_ANISOTROPY;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
+  texture.needsUpdate = true;
+}
+
+function ProceduralWallMaterial({ color, texture, textureRepeatX }: WallMaterialProps) {
   const textureMap = useMemo(() => makeNoiseTexture(color, texture), [color, texture]);
   const aoMap = useMemo(() => makeAmbientOcclusionTexture(), []);
   const bumpMap = useMemo(() => makeBumpTexture(texture), [texture]);
-  const textureRepeatX =
-    texture === 'concrete'
-      ? Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_WIDTH_MM)
-      : Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_HEIGHT_MM);
-  const geometry = useMemo(() => {
-    const boxGeometry = new THREE.BoxGeometry(width, height, depth);
-    const uv = boxGeometry.getAttribute('uv');
-
-    if (uv) {
-      boxGeometry.setAttribute('uv2', uv.clone());
-    }
-
-    return boxGeometry;
-  }, [depth, height, width]);
   const settings = materialSettings(texture);
 
   if (textureMap) {
@@ -464,19 +537,87 @@ function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
   }
 
   return (
+    <meshStandardMaterial
+      color={color}
+      map={textureMap ?? undefined}
+      aoMap={aoMap ?? undefined}
+      aoMapIntensity={0.48}
+      bumpMap={bumpMap ?? undefined}
+      bumpScale={settings.bumpScale}
+      roughness={settings.roughness}
+      metalness={settings.metalness}
+      transparent={settings.transparent}
+      opacity={settings.opacity}
+    />
+  );
+}
+
+function ImageWallMaterial({ texture, textureRepeatX, textureRepeatY }: WallMaterialProps) {
+  const loadedTexture = useLoader(THREE.TextureLoader, texture ?? '');
+  const textureMap = useMemo(() => makeAdjustedImageTexture(loadedTexture, texture), [loadedTexture, texture]);
+  const bumpMap = useMemo(() => makeAdjustedImageTexture(loadedTexture, texture), [loadedTexture, texture]);
+  const aoMap = useMemo(() => makeAmbientOcclusionTexture(), []);
+  const settings = materialSettings(texture);
+
+  configureWallTexture(textureMap, textureRepeatX, textureRepeatY);
+  configureWallTexture(bumpMap, textureRepeatX, textureRepeatY);
+
+  return (
+    <meshStandardMaterial
+      color={imageMaterialTint(texture)}
+      map={textureMap}
+      aoMap={aoMap ?? undefined}
+      aoMapIntensity={isKalkzandsteenTexture(texture) ? 0.46 : 0.42}
+      bumpMap={bumpMap}
+      bumpScale={settings.bumpScale}
+      roughness={settings.roughness}
+      metalness={settings.metalness}
+      transparent={settings.transparent}
+      opacity={settings.opacity}
+    />
+  );
+}
+
+function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
+  const usesImageTexture = texture?.startsWith('/materials/');
+  const imageTextureSize = imageTextureSizeMm(texture);
+  const textureRepeatX =
+    texture === 'concrete'
+      ? Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_WIDTH_MM)
+      : usesImageTexture
+        ? Math.max(1, width / MM_TO_UNIT / imageTextureSize.widthMm)
+        : Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_HEIGHT_MM);
+  const textureRepeatY = usesImageTexture
+    ? Math.max(1, height / MM_TO_UNIT / imageTextureSize.heightMm)
+    : 1;
+  const geometry = useMemo(() => {
+    const boxGeometry = new THREE.BoxGeometry(width, height, depth);
+    const uv = boxGeometry.getAttribute('uv');
+
+    if (uv) {
+      boxGeometry.setAttribute('uv2', uv.clone());
+    }
+
+    return boxGeometry;
+  }, [depth, height, width]);
+
+  return (
     <mesh geometry={geometry}>
-      <meshStandardMaterial
-        color={color}
-        map={textureMap ?? undefined}
-        aoMap={aoMap ?? undefined}
-        aoMapIntensity={0.48}
-        bumpMap={bumpMap ?? undefined}
-        bumpScale={settings.bumpScale}
-        roughness={settings.roughness}
-        metalness={settings.metalness}
-        transparent={settings.transparent}
-        opacity={settings.opacity}
-      />
+      {usesImageTexture ? (
+        <ImageWallMaterial
+          color={color}
+          texture={texture}
+          textureRepeatX={textureRepeatX}
+          textureRepeatY={textureRepeatY}
+        />
+      ) : (
+        <ProceduralWallMaterial
+          color={color}
+          texture={texture}
+          textureRepeatX={textureRepeatX}
+          textureRepeatY={textureRepeatY}
+        />
+      )}
     </mesh>
   );
 }
@@ -810,12 +951,12 @@ function Scene({
         maxDistance={Math.max(80, maxSceneDimension * 3)}
         target={[0, totalHeight / 2, totalDepth / 2]}
       />
-      <Environment files="/hdri/studio_small_03_1k.hdr" environmentIntensity={0.58} />
-      <ambientLight intensity={0.13} />
-      <hemisphereLight args={['#ffffff', '#cfc6ba', 0.34]} />
+      <Environment files="/hdri/studio_small_03_1k.hdr" environmentIntensity={0.46} />
+      <ambientLight intensity={0.1} />
+      <hemisphereLight args={['#ffffff', '#cfc6ba', 0.28]} />
       <directionalLight
         position={[-16, 19, 16]}
-        intensity={2.65}
+        intensity={2.18}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -942,7 +1083,7 @@ export function WallAssemblyViewport({
       }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.16;
+        gl.toneMappingExposure = 0.84;
         gl.shadowMap.enabled = true;
         gl.shadowMap.type = THREE.PCFSoftShadowMap;
       }}

@@ -33,9 +33,7 @@ function materialIdForLayer(layer: WallLayer, materials: MaterialDefinition[]) {
     materials.find(
       (material) =>
         material.name === layer.name &&
-        material.material === layer.material &&
-        material.color === layer.color &&
-        material.texture === layer.texture,
+        material.uiCategory === layer.material,
     )?.id ?? materials[0]?.id ?? ''
   );
 }
