@@ -24,6 +24,8 @@ type DragState = {
   dropIndex: number;
 } | null;
 
+type ThicknessInputState = Record<string, string | undefined>;
+
 const sectionKeys: SectionKey[] = ['existingWall', 'newWall'];
 
 function materialIdForLayer(layer: WallLayer, materials: MaterialDefinition[]) {
@@ -48,6 +50,29 @@ function getDropIndex(event: DragEvent<HTMLElement>, index: number) {
   return index + (isAfterMidpoint ? 1 : 0);
 }
 
+function formatThicknessInput(value: number) {
+  return Number.isInteger(value) ? String(value) : String(value).replace('.', ',');
+}
+
+function parseThicknessInput(value: string) {
+  const normalizedValue = value.trim().replace(',', '.');
+
+  if (!/^\d*\.?\d*$/.test(normalizedValue) || normalizedValue === '') {
+    return null;
+  }
+
+  const parsedValue = Number(normalizedValue);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
+function isValidThicknessDraft(value: string) {
+  return /^\d*([,.]\d*)?$/.test(value);
+}
+
+function normalizeThicknessDraft(value: string) {
+  return value.replace(/^0+(?=\d)/, '');
+}
+
 export function ComposerPanel({
   data,
   materials,
@@ -58,6 +83,7 @@ export function ComposerPanel({
   onMoveLayer,
 }: ComposerPanelProps) {
   const [dragState, setDragState] = useState<DragState>(null);
+  const [thicknessInputs, setThicknessInputs] = useState<ThicknessInputState>({});
   const sectionAddMaterials = useMemo(
     () =>
       sectionKeys.reduce<Record<SectionKey, string>>(
@@ -70,6 +96,37 @@ export function ComposerPanel({
     [],
   );
   const [selectedMaterialBySection, setSelectedMaterialBySection] = useState(sectionAddMaterials);
+
+  const renderDropIndicator = (sectionKey: SectionKey, dropIndex: number) => (
+    <div
+      className="composer-drop-indicator"
+      onDragEnter={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setDragState((current) =>
+          current?.sectionKey === sectionKey ? { ...current, dropIndex } : current,
+        );
+      }}
+      onDragOver={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = 'move';
+        setDragState((current) =>
+          current?.sectionKey === sectionKey ? { ...current, dropIndex } : current,
+        );
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (dragState?.sectionKey === sectionKey) {
+          onMoveLayer?.(sectionKey, dragState.fromIndex, dropIndex);
+        }
+
+        setDragState(null);
+      }}
+    />
+  );
 
   if (!data) {
     return (
@@ -107,97 +164,132 @@ export function ComposerPanel({
                 setDragState(null);
               }}
             >
-              {activeDropIndex === 0 ? <div className="composer-drop-indicator" /> : null}
-              {wallSection.layers.map((layer, index) => (
-                <div key={layer.id}>
-                  <div
-                    className={[
-                      'composer-layer',
-                      dragState?.sectionKey === sectionKey && dragState.fromIndex === index
-                        ? 'is-dragging'
-                        : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    draggable
-                    onDragStart={(event) => {
-                      event.dataTransfer.effectAllowed = 'move';
-                      event.dataTransfer.setData('text/plain', layer.id);
-                      setDragState({ sectionKey, fromIndex: index, dropIndex: index });
-                    }}
-                    onDragEnter={(event) => {
-                      event.preventDefault();
-                      const dropIndex = clampDropIndex(
-                        getDropIndex(event, index),
-                        wallSection.layers.length,
-                      );
-                      setDragState((current) =>
-                        current?.sectionKey === sectionKey ? { ...current, dropIndex } : current,
-                      );
-                    }}
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      event.dataTransfer.dropEffect = 'move';
-                      const dropIndex = clampDropIndex(
-                        getDropIndex(event, index),
-                        wallSection.layers.length,
-                      );
-                      setDragState((current) =>
-                        current?.sectionKey === sectionKey ? { ...current, dropIndex } : current,
-                      );
-                    }}
-                    onDragEnd={() => {
-                      setDragState(null);
-                    }}
-                  >
-                    <span className="composer-drag-handle" aria-hidden="true">
-                      ::
-                    </span>
-                    <span className="legend-swatch" style={{ background: layer.color }} />
-                    <label>
-                      <span>Materiaal</span>
-                      <select
-                        aria-label="Materiaal"
-                        value={materialIdForLayer(layer, materials)}
-                        onChange={(event) =>
-                          onChangeLayerMaterial?.(sectionKey, layer.id, event.currentTarget.value)
-                        }
-                      >
-                        {materials.map((material) => (
-                          <option key={material.id} value={material.id}>
-                            {material.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      <span>Dikte</span>
-                      <input
-                        type="number"
-                        min={1}
-                        step={0.5}
-                        value={layer.thicknessMm}
-                        onChange={(event) =>
-                          onUpdateLayer?.(sectionKey, layer.id, {
-                            thicknessMm: Number(event.currentTarget.value),
-                          })
-                        }
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      className="icon-button"
-                      aria-label={`${layer.name} verwijderen`}
-                      onClick={() => onRemoveLayer?.(sectionKey, layer.id)}
+              {activeDropIndex === 0 ? renderDropIndicator(sectionKey, 0) : null}
+              {wallSection.layers.map((layer, index) => {
+                const thicknessInputKey = `${sectionKey}:${layer.id}`;
+                const thicknessInputValue =
+                  thicknessInputs[thicknessInputKey] ?? formatThicknessInput(layer.thicknessMm);
+
+                return (
+                  <div key={layer.id}>
+                    <div
+                      className={[
+                        'composer-layer',
+                        dragState?.sectionKey === sectionKey && dragState.fromIndex === index
+                          ? 'is-dragging'
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      draggable
+                      onDragStart={(event) => {
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData('text/plain', layer.id);
+                        setDragState({ sectionKey, fromIndex: index, dropIndex: index });
+                      }}
+                      onDragEnter={(event) => {
+                        event.preventDefault();
+                        const dropIndex = clampDropIndex(
+                          getDropIndex(event, index),
+                          wallSection.layers.length,
+                        );
+                        setDragState((current) =>
+                          current?.sectionKey === sectionKey ? { ...current, dropIndex } : current,
+                        );
+                      }}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = 'move';
+                        const dropIndex = clampDropIndex(
+                          getDropIndex(event, index),
+                          wallSection.layers.length,
+                        );
+                        setDragState((current) =>
+                          current?.sectionKey === sectionKey ? { ...current, dropIndex } : current,
+                        );
+                      }}
+                      onDragEnd={() => {
+                        setDragState(null);
+                      }}
                     >
-                      x
-                    </button>
+                      <span className="composer-drag-handle" aria-hidden="true">
+                        ::
+                      </span>
+                      <span className="legend-swatch" style={{ background: layer.color }} />
+                      <label>
+                        <span>Materiaal</span>
+                        <select
+                          aria-label="Materiaal"
+                          value={materialIdForLayer(layer, materials)}
+                          onChange={(event) =>
+                            onChangeLayerMaterial?.(sectionKey, layer.id, event.currentTarget.value)
+                          }
+                        >
+                          {materials.map((material) => (
+                            <option key={material.id} value={material.id}>
+                              {material.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        <span>Dikte</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={thicknessInputValue}
+                          onBlur={() => {
+                            const thicknessMm = parseThicknessInput(thicknessInputValue);
+
+                            if (thicknessMm !== null) {
+                              onUpdateLayer?.(sectionKey, layer.id, {
+                                thicknessMm: Math.max(1, thicknessMm),
+                              });
+                            }
+
+                            setThicknessInputs((current) => ({
+                              ...current,
+                              [thicknessInputKey]: undefined,
+                            }));
+                          }}
+                          onChange={(event) => {
+                            const rawValue = event.currentTarget.value;
+
+                            if (!isValidThicknessDraft(rawValue)) {
+                              return;
+                            }
+
+                            const nextValue = normalizeThicknessDraft(rawValue);
+                            setThicknessInputs((current) => ({
+                              ...current,
+                              [thicknessInputKey]: nextValue,
+                            }));
+
+                            if (!/[,.]$/.test(nextValue)) {
+                              const thicknessMm = parseThicknessInput(nextValue);
+
+                              if (thicknessMm !== null) {
+                                onUpdateLayer?.(sectionKey, layer.id, { thicknessMm });
+                              }
+                            }
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="icon-button"
+                        aria-label={`${layer.name} verwijderen`}
+                        onClick={() => onRemoveLayer?.(sectionKey, layer.id)}
+                      >
+                        x
+                      </button>
+                    </div>
+                    {activeDropIndex === index + 1
+                      ? renderDropIndicator(sectionKey, index + 1)
+                      : null}
                   </div>
-                  {activeDropIndex === index + 1 ? (
-                    <div className="composer-drop-indicator" />
-                  ) : null}
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="composer-add-layer">
               <select
