@@ -464,7 +464,7 @@ function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
   }
 
   return (
-    <mesh geometry={geometry} castShadow>
+    <mesh geometry={geometry}>
       <meshStandardMaterial
         color={color}
         map={textureMap ?? undefined}
@@ -625,12 +625,12 @@ function LayerGroupCallout({
 function RoomSurfaces({ width, height, depth }: RoomSurfacesProps) {
   const roomDepth = Math.max(depth + 95, 110);
   const roomWidth = Math.max(width + 70, 120);
-  const centerZ = depth / 2 + roomDepth * 0.43;
+  const centerZ = depth / 2;
   const floorMap = useMemo(() => makeInfinitySurfaceTexture('#f1f2f1', '#f8f8f6', 'floor'), []);
 
   return (
     <group>
-      <mesh position={[0, -0.035, centerZ]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[0, -0.035, centerZ]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[roomWidth, roomDepth]} />
         <meshStandardMaterial
           color="#ffffff"
@@ -810,7 +810,7 @@ function Scene({
         maxDistance={Math.max(80, maxSceneDimension * 3)}
         target={[0, totalHeight / 2, totalDepth / 2]}
       />
-      <Environment preset="studio" environmentIntensity={0.58} />
+      <Environment files="/hdri/studio_small_03_1k.hdr" environmentIntensity={0.58} />
       <ambientLight intensity={0.13} />
       <hemisphereLight args={['#ffffff', '#cfc6ba', 0.34]} />
       <directionalLight

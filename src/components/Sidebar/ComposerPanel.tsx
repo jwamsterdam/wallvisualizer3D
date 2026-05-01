@@ -295,12 +295,14 @@ export function ComposerPanel({
               <select
                 aria-label={`Materiaal toevoegen aan ${wallSection.title}`}
                 value={selectedMaterialBySection[sectionKey] ?? ''}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const materialId = event.currentTarget.value;
+
                   setSelectedMaterialBySection((current) => ({
                     ...current,
-                    [sectionKey]: event.currentTarget.value,
-                  }))
-                }
+                    [sectionKey]: materialId,
+                  }));
+                }}
               >
                 <option value="" disabled>
                   Kies materiaal...
