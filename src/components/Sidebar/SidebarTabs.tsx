@@ -8,7 +8,7 @@ type SidebarTabsProps = {
 
 export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps) {
   return (
-    <div className="sidebar-tabs" role="tablist" aria-label="Viewer sidebar">
+    <div className="sidebar-tabs" role="tablist" aria-label="Zijpaneel">
       {sidebarTabs.map((tab) => (
         <button
           key={tab.id}

@@ -19,7 +19,7 @@ Alle noemenswaardige wijzigingen aan dit project worden in dit bestand bijgehoud
 
 - De oude gefaseerde viewer is vervangen door een app-structuur met een losse 3D viewport en losse sidebar-componenten.
 - `WallAssemblyViewer` is opgesplitst; de 3D scene leeft nu in `WallAssemblyViewport`.
-- De sidebar heeft tabs voor `Composer`, `Simulator` en instellingen.
+- De sidebar heeft tabs voor `Bouwen`, `Luisteren` en instellingen.
 - `Huidige muur` en `Nieuwe muur met voorzetwand` worden als twee afzonderlijke constructies opgebouwd.
 - Sidebar-secties zijn vormgegeven als losse panelen zonder buitenste containerkaart.
 - Dropdowns en inputs zijn compacter en rustiger vormgegeven.
@@ -40,7 +40,7 @@ Alle noemenswaardige wijzigingen aan dit project worden in dit bestand bijgehoud
 ### Gewijzigd
 
 - Refactor van de app-layout naar losse componenten voor viewport en sidebar.
-- Sidebar-tabstructuur met `Composer`, `Simulator` en instellingen.
+- Sidebar-tabstructuur met `Bouwen`, `Luisteren` en instellingen.
 
 ## v1.0
 

@@ -21,8 +21,8 @@ Beide wanden worden volledig afzonderlijk opgebouwd. Dat is bewust zo gedaan, zo
 - Geluidvisualisatie met geanimeerde ringen voor huidige of nieuwe muur.
 - Klik op de huidige of nieuwe muur om de geluidvisualisatie naar die zijde te schakelen.
 - Klik buiten de constructie om de geluidvisualisatie uit te zetten.
-- Sidebar met tabs voor `Composer`, `Simulator` en instellingen.
-- Composer om lagen toe te voegen, materiaal te kiezen, dikte te wijzigen, lagen te verwijderen en lagen te herschikken met drag-and-drop.
+- Sidebar met tabs voor `Bouwen`, `Luisteren` en instellingen.
+- Bouwen-tab om lagen toe te voegen, materiaal te kiezen, dikte te wijzigen, lagen te verwijderen en lagen te herschikken met drag-and-drop.
 - Materiaalbibliotheek in de app opgeslagen.
 - Screenshotknop voor de 3D viewport.
 
@@ -142,8 +142,8 @@ Container voor de tab-inhoud. De tabs zelf staan erboven in `SidebarTabs`.
 
 Tabs:
 
-- `Composer`: lagen beheren.
-- `Simulator`: placeholder voor toekomstige simulatiefunctionaliteit.
+- `Bouwen`: lagen beheren.
+- `Luisteren`: placeholder voor toekomstige luister- en simulatiefunctionaliteit.
 - Instellingen: labels, screenshot, geluidvisualisatie en schaduw.
 
 ## Tests

@@ -40,7 +40,7 @@ De app is geen losse single-component demo meer. Behandel het als een kleine app
 
 - De eerste viewport is de werkelijke app, geen landingpage.
 - De 3D scene blijft links, de sidebar rechts op desktop.
-- Sidebar-tabs staan boven de sidebar-panelen.
+- Sidebar-tabs staan boven de sidebar-panelen en gebruiken gebruikerslabels `Bouwen`, `Luisteren` en `Instellingen`.
 - Sidebar-panelen zijn losse blokken; gebruik geen extra containerkaart om alle panelen heen.
 - Composer-lagen zijn platte rijen met separators binnen een muurpanel, geen losse kaart per laag.
 - Dikte-inputs zijn compact en rechts uitgelijnd.

@@ -7,7 +7,7 @@ export type SidebarTabItem = {
 };
 
 export const sidebarTabs: SidebarTabItem[] = [
-  { id: 'composer', label: 'Composer' },
-  { id: 'simulator', label: 'Simulator' },
-  { id: 'settings', label: 'Settings', icon: 'settings' },
+  { id: 'composer', label: 'Bouwen' },
+  { id: 'simulator', label: 'Luisteren' },
+  { id: 'settings', label: 'Instellingen', icon: 'settings' },
 ];
