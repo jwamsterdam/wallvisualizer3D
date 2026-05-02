@@ -19,10 +19,16 @@ const DEFAULT_MIN_VISUAL_THICKNESS_MM = 24;
 const TEXTURE_ANISOTROPY = 8;
 const WALL_TEXTURE_HEIGHT_MM = 2800;
 const WALL_TEXTURE_WIDTH_MM = 1400;
-const KALKSANDSTONE_TEXTURE_WIDTH_MM = 3000;
-const KALKSANDSTONE_TEXTURE_HEIGHT_MM = 2800;
+const KALKSANDSTONE_TEXTURE_WIDTH_MM = 1710;
+const KALKSANDSTONE_TEXTURE_HEIGHT_MM = 1596;
 const BRICK_TEXTURE_WIDTH_MM = 1100;
 const BRICK_TEXTURE_HEIGHT_MM = 1200;
+const GYPSUM_TEXTURE_WIDTH_MM = 2400;
+const GYPSUM_TEXTURE_HEIGHT_MM = 2800;
+const GLASS_WOOL_TEXTURE_WIDTH_MM = 750;
+const GLASS_WOOL_TEXTURE_HEIGHT_MM = 700;
+const OSB_TEXTURE_WIDTH_MM = 1500;
+const OSB_TEXTURE_HEIGHT_MM = 1400;
 const STONE_WOOL_TEXTURE_WIDTH_MM = 1200;
 const STONE_WOOL_TEXTURE_HEIGHT_MM = 1200;
 const BRICK_WIDTH_MM = 210;
@@ -480,6 +486,10 @@ function isGipsplaatTexture(textureName?: string) {
   return textureName?.startsWith('/materials/gipsplaat/');
 }
 
+function isOsbTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/osb/');
+}
+
 function isGlaswolTexture(textureName?: string) {
   return textureName?.startsWith('/materials/glaswol/');
 }
@@ -502,11 +512,15 @@ function imageTextureSizeMm(textureName?: string) {
   }
 
   if (isGipsplaatTexture(textureName)) {
-    return { widthMm: 3600, heightMm: 2800 };
+    return { widthMm: GYPSUM_TEXTURE_WIDTH_MM, heightMm: GYPSUM_TEXTURE_HEIGHT_MM };
+  }
+
+  if (isOsbTexture(textureName)) {
+    return { widthMm: OSB_TEXTURE_WIDTH_MM, heightMm: OSB_TEXTURE_HEIGHT_MM };
   }
 
   if (isGlaswolTexture(textureName)) {
-    return { widthMm: STONE_WOOL_TEXTURE_WIDTH_MM, heightMm: STONE_WOOL_TEXTURE_HEIGHT_MM };
+    return { widthMm: GLASS_WOOL_TEXTURE_WIDTH_MM, heightMm: GLASS_WOOL_TEXTURE_HEIGHT_MM };
   }
 
   if (isStoneWoolTexture(textureName)) {
@@ -565,12 +579,20 @@ function configureWallTexture(texture: THREE.Texture, repeatX: number, repeatY: 
 }
 
 function normalMapPath(textureName?: string) {
+  if (isKalkzandsteenTexture(textureName)) {
+    return '/materials/kalkzandsteen/kalkzandsteen-normal.webp';
+  }
+
   if (isBaksteenTexture(textureName)) {
     return '/materials/baksteen/baksteen-normal.webp';
   }
 
   if (isGipsplaatTexture(textureName)) {
-    return '/materials/gipsplaat/gipsplaat-normal.png';
+    return '/materials/gipsplaat/gipsplaat-normal.webp';
+  }
+
+  if (isOsbTexture(textureName)) {
+    return '/materials/osb/osb-normal.webp';
   }
 
   if (isGlaswolTexture(textureName)) {
@@ -581,12 +603,20 @@ function normalMapPath(textureName?: string) {
 }
 
 function normalScaleForTexture(textureName?: string) {
+  if (isKalkzandsteenTexture(textureName)) {
+    return new THREE.Vector2(0.28, 0.28);
+  }
+
   if (isBaksteenTexture(textureName)) {
     return new THREE.Vector2(0.5, 0.5);
   }
 
   if (isGipsplaatTexture(textureName)) {
     return new THREE.Vector2(0.2, 0.2);
+  }
+
+  if (isOsbTexture(textureName)) {
+    return new THREE.Vector2(0.32, 0.32);
   }
 
   if (isGlaswolTexture(textureName)) {
