@@ -9,9 +9,12 @@ import {
 
 describe('materialLibrary', () => {
   it('contains built-in materials for the wall composer', () => {
-    expect(materials).toHaveLength(20);
+    expect(materials).toHaveLength(12);
     expect(materialLibrary.map((material) => material.id)).toContain('kalkzandsteen');
-    expect(materialLibrary.map((material) => material.id)).toContain('steenwol-middel');
+    expect(materialLibrary.map((material) => material.id)).toContain('beton');
+    expect(materialLibrary.map((material) => material.id)).toContain('steenwol');
+    expect(materialLibrary.map((material) => material.id)).not.toContain('beton-licht');
+    expect(materialLibrary.map((material) => material.id)).not.toContain('steenwol-middel');
     expect(materialById.get('gipsplaat')?.typicalThicknessesMm).toEqual([9.5, 12.5, 15]);
   });
 

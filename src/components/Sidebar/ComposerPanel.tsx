@@ -71,6 +71,21 @@ function normalizeThicknessDraft(value: string) {
   return value.replace(/^0+(?=\d)/, '');
 }
 
+function hasImageTexture(texture?: string) {
+  return texture?.startsWith('/materials/');
+}
+
+function layerSwatchStyle(layer: WallLayer) {
+  if (!hasImageTexture(layer.texture)) {
+    return { backgroundColor: layer.color };
+  }
+
+  return {
+    backgroundColor: layer.color,
+    backgroundImage: `url("${layer.texture}")`,
+  };
+}
+
 export function ComposerPanel({
   data,
   materials,
@@ -213,7 +228,15 @@ export function ComposerPanel({
                       <span className="composer-drag-handle" aria-hidden="true">
                         ::
                       </span>
-                      <span className="legend-swatch" style={{ background: layer.color }} />
+                      <span
+                        className={[
+                          'legend-swatch',
+                          hasImageTexture(layer.texture) ? 'legend-swatch--texture' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        style={layerSwatchStyle(layer)}
+                      />
                       <label>
                         <span>Materiaal</span>
                         <select

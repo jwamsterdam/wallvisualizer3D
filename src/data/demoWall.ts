@@ -38,7 +38,7 @@ export const demoWall: WallAssemblyInput = {
       },
       {
         id: 'insulation-1',
-        name: 'Steenwol middel',
+        name: 'Steenwol',
         material: 'Porous fill',
         thicknessMm: 70,
         color: '#d7bd63',

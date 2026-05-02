@@ -23,12 +23,20 @@ const KALKSANDSTONE_TEXTURE_WIDTH_MM = 1710;
 const KALKSANDSTONE_TEXTURE_HEIGHT_MM = 1596;
 const BRICK_TEXTURE_WIDTH_MM = 1100;
 const BRICK_TEXTURE_HEIGHT_MM = 1200;
+const CONCRETE_TEXTURE_WIDTH_MM = 1500;
+const CONCRETE_TEXTURE_HEIGHT_MM = 1400;
 const GYPSUM_TEXTURE_WIDTH_MM = 2400;
 const GYPSUM_TEXTURE_HEIGHT_MM = 2800;
 const GLASS_WOOL_TEXTURE_WIDTH_MM = 750;
 const GLASS_WOOL_TEXTURE_HEIGHT_MM = 700;
-const OSB_TEXTURE_WIDTH_MM = 1500;
-const OSB_TEXTURE_HEIGHT_MM = 1400;
+const OSB_TEXTURE_WIDTH_MM = 4898;
+const OSB_TEXTURE_HEIGHT_MM = 4590;
+const MULTIPLEX_TEXTURE_WIDTH_MM = 1500;
+const MULTIPLEX_TEXTURE_HEIGHT_MM = 1400;
+const MDF_TEXTURE_WIDTH_MM = 1500;
+const MDF_TEXTURE_HEIGHT_MM = 1400;
+const STUCCO_TEXTURE_WIDTH_MM = 1500;
+const STUCCO_TEXTURE_HEIGHT_MM = 1400;
 const STONE_WOOL_TEXTURE_WIDTH_MM = 1200;
 const STONE_WOOL_TEXTURE_HEIGHT_MM = 1200;
 const BRICK_WIDTH_MM = 210;
@@ -448,6 +456,10 @@ function materialSettings(textureName?: string) {
     return { roughness: 0.92, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.075 };
   }
 
+  if (textureName?.startsWith('/materials/beton/')) {
+    return { roughness: 0.94, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.075 };
+  }
+
   if (textureName?.startsWith('/materials/gipsplaat/')) {
     return { roughness: 0.86, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.018 };
   }
@@ -458,6 +470,10 @@ function materialSettings(textureName?: string) {
 
   if (textureName?.startsWith('/materials/steenwol/')) {
     return { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.065 };
+  }
+
+  if (textureName?.startsWith('/materials/stucwerk/')) {
+    return { roughness: 0.9, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.02 };
   }
 
   switch (textureName) {
@@ -482,12 +498,28 @@ function isBaksteenTexture(textureName?: string) {
   return textureName?.startsWith('/materials/baksteen/');
 }
 
+function isConcreteTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/beton/');
+}
+
 function isGipsplaatTexture(textureName?: string) {
   return textureName?.startsWith('/materials/gipsplaat/');
 }
 
 function isOsbTexture(textureName?: string) {
   return textureName?.startsWith('/materials/osb/');
+}
+
+function isMultiplexTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/multiplex/');
+}
+
+function isMdfTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/mdf/');
+}
+
+function isStucwerkTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/stucwerk/');
 }
 
 function isGlaswolTexture(textureName?: string) {
@@ -511,12 +543,28 @@ function imageTextureSizeMm(textureName?: string) {
     return { widthMm: BRICK_TEXTURE_WIDTH_MM, heightMm: BRICK_TEXTURE_HEIGHT_MM };
   }
 
+  if (isConcreteTexture(textureName)) {
+    return { widthMm: CONCRETE_TEXTURE_WIDTH_MM, heightMm: CONCRETE_TEXTURE_HEIGHT_MM };
+  }
+
   if (isGipsplaatTexture(textureName)) {
     return { widthMm: GYPSUM_TEXTURE_WIDTH_MM, heightMm: GYPSUM_TEXTURE_HEIGHT_MM };
   }
 
   if (isOsbTexture(textureName)) {
     return { widthMm: OSB_TEXTURE_WIDTH_MM, heightMm: OSB_TEXTURE_HEIGHT_MM };
+  }
+
+  if (isMultiplexTexture(textureName)) {
+    return { widthMm: MULTIPLEX_TEXTURE_WIDTH_MM, heightMm: MULTIPLEX_TEXTURE_HEIGHT_MM };
+  }
+
+  if (isMdfTexture(textureName)) {
+    return { widthMm: MDF_TEXTURE_WIDTH_MM, heightMm: MDF_TEXTURE_HEIGHT_MM };
+  }
+
+  if (isStucwerkTexture(textureName)) {
+    return { widthMm: STUCCO_TEXTURE_WIDTH_MM, heightMm: STUCCO_TEXTURE_HEIGHT_MM };
   }
 
   if (isGlaswolTexture(textureName)) {
@@ -587,12 +635,28 @@ function normalMapPath(textureName?: string) {
     return '/materials/baksteen/baksteen-normal.webp';
   }
 
+  if (isConcreteTexture(textureName)) {
+    return '/materials/beton/beton-normal.webp';
+  }
+
   if (isGipsplaatTexture(textureName)) {
     return '/materials/gipsplaat/gipsplaat-normal.webp';
   }
 
   if (isOsbTexture(textureName)) {
     return '/materials/osb/osb-normal.webp';
+  }
+
+  if (isMultiplexTexture(textureName)) {
+    return '/materials/multiplex/multiplex-normal.webp';
+  }
+
+  if (isMdfTexture(textureName)) {
+    return '/materials/mdf/mdf-normal.webp';
+  }
+
+  if (isStucwerkTexture(textureName)) {
+    return '/materials/stucwerk/stucwerk-normal.webp';
   }
 
   if (isGlaswolTexture(textureName)) {
@@ -611,12 +675,28 @@ function normalScaleForTexture(textureName?: string) {
     return new THREE.Vector2(0.5, 0.5);
   }
 
+  if (isConcreteTexture(textureName)) {
+    return new THREE.Vector2(0.34, 0.34);
+  }
+
   if (isGipsplaatTexture(textureName)) {
     return new THREE.Vector2(0.2, 0.2);
   }
 
   if (isOsbTexture(textureName)) {
     return new THREE.Vector2(0.32, 0.32);
+  }
+
+  if (isMultiplexTexture(textureName)) {
+    return new THREE.Vector2(0.26, 0.26);
+  }
+
+  if (isMdfTexture(textureName)) {
+    return new THREE.Vector2(0.2, 0.2);
+  }
+
+  if (isStucwerkTexture(textureName)) {
+    return new THREE.Vector2(0.16, 0.16);
   }
 
   if (isGlaswolTexture(textureName)) {
@@ -731,10 +811,10 @@ function WallBox({ width, height, depth, color, texture }: WallBoxProps) {
     texture === 'concrete'
       ? Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_WIDTH_MM)
       : usesImageTexture
-        ? Math.max(1, width / MM_TO_UNIT / imageTextureSize.widthMm)
+        ? width / MM_TO_UNIT / imageTextureSize.widthMm
         : Math.max(1, width / MM_TO_UNIT / WALL_TEXTURE_HEIGHT_MM);
   const textureRepeatY = usesImageTexture
-    ? Math.max(1, height / MM_TO_UNIT / imageTextureSize.heightMm)
+    ? height / MM_TO_UNIT / imageTextureSize.heightMm
     : 1;
   const geometry = useMemo(() => {
     const boxGeometry = new THREE.BoxGeometry(width, height, depth);

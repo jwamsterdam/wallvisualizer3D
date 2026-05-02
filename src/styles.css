@@ -142,6 +142,12 @@ h1 {
   border-radius: 4px;
 }
 
+.legend-swatch--texture {
+  background-position: center;
+  background-repeat: repeat;
+  background-size: cover;
+}
+
 .composer-panel {
   display: grid;
   gap: 10px;
