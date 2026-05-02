@@ -660,7 +660,11 @@ function normalMapPath(textureName?: string) {
   }
 
   if (isGlaswolTexture(textureName)) {
-    return '/materials/glaswol/glaswol-normal.png';
+    return '/materials/glaswol/glaswol-normal.webp';
+  }
+
+  if (isStoneWoolTexture(textureName)) {
+    return '/materials/steenwol/steenwol-normal.webp';
   }
 
   return undefined;
@@ -701,6 +705,10 @@ function normalScaleForTexture(textureName?: string) {
 
   if (isGlaswolTexture(textureName)) {
     return new THREE.Vector2(0.34, 0.34);
+  }
+
+  if (isStoneWoolTexture(textureName)) {
+    return new THREE.Vector2(0.32, 0.32);
   }
 
   return new THREE.Vector2(0.25, 0.25);

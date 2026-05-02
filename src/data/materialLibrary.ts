@@ -22,7 +22,7 @@ const visualByMaterialId: Record<string, MaterialVisual> = {
   kalkzandsteen: { color: '#f2f3f0', texture: '/materials/kalkzandsteen/kalkzandsteen.webp' },
   baksteen: { color: '#c45f34', texture: '/materials/baksteen/baksteen.webp' },
   luchtspouw: { color: '#d8eef7', texture: 'air' },
-  steenwol: { color: '#d7bd63', texture: '/materials/steenwol/steenwol.png' },
+  steenwol: { color: '#d7bd63', texture: '/materials/steenwol/steenwol.webp' },
   glaswol: { color: '#f4d978', texture: '/materials/glaswol/glaswol.webp' },
   stucwerk: { color: '#f3f0ea', texture: '/materials/stucwerk/stucwerk.webp' },
 };
