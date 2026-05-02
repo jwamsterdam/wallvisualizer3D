@@ -1079,6 +1079,8 @@ function Scene({
         zoomSpeed={0.85}
         minDistance={Math.max(6, maxSceneDimension * 0.18)}
         maxDistance={Math.max(80, maxSceneDimension * 3)}
+        minPolarAngle={0.12}
+        maxPolarAngle={Math.PI / 2 - 0.04}
         target={[0, totalHeight / 2, totalDepth / 2]}
       />
       <Environment files="/hdri/studio_small_03_1k.hdr" environmentIntensity={0.46} />
