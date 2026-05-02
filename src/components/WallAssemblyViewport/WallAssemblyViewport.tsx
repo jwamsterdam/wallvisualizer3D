@@ -438,6 +438,18 @@ function materialSettings(textureName?: string) {
     return { roughness: 1, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.085 };
   }
 
+  if (textureName?.startsWith('/materials/baksteen/')) {
+    return { roughness: 0.92, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.075 };
+  }
+
+  if (textureName?.startsWith('/materials/gipsplaat/')) {
+    return { roughness: 0.86, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.018 };
+  }
+
+  if (textureName?.startsWith('/materials/glaswol/')) {
+    return { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.055 };
+  }
+
   if (textureName?.startsWith('/materials/steenwol/')) {
     return { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.065 };
   }
@@ -464,6 +476,14 @@ function isBaksteenTexture(textureName?: string) {
   return textureName?.startsWith('/materials/baksteen/');
 }
 
+function isGipsplaatTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/gipsplaat/');
+}
+
+function isGlaswolTexture(textureName?: string) {
+  return textureName?.startsWith('/materials/glaswol/');
+}
+
 function isStoneWoolTexture(textureName?: string) {
   return textureName?.startsWith('/materials/steenwol/');
 }
@@ -479,6 +499,14 @@ function imageMaterialTint(textureName?: string) {
 function imageTextureSizeMm(textureName?: string) {
   if (isBaksteenTexture(textureName)) {
     return { widthMm: BRICK_TEXTURE_WIDTH_MM, heightMm: BRICK_TEXTURE_HEIGHT_MM };
+  }
+
+  if (isGipsplaatTexture(textureName)) {
+    return { widthMm: 3600, heightMm: 2800 };
+  }
+
+  if (isGlaswolTexture(textureName)) {
+    return { widthMm: STONE_WOOL_TEXTURE_WIDTH_MM, heightMm: STONE_WOOL_TEXTURE_HEIGHT_MM };
   }
 
   if (isStoneWoolTexture(textureName)) {
@@ -536,6 +564,38 @@ function configureWallTexture(texture: THREE.Texture, repeatX: number, repeatY: 
   texture.needsUpdate = true;
 }
 
+function normalMapPath(textureName?: string) {
+  if (isBaksteenTexture(textureName)) {
+    return '/materials/baksteen/baksteen-normal.png';
+  }
+
+  if (isGipsplaatTexture(textureName)) {
+    return '/materials/gipsplaat/gipsplaat-normal.png';
+  }
+
+  if (isGlaswolTexture(textureName)) {
+    return '/materials/glaswol/glaswol-normal.png';
+  }
+
+  return undefined;
+}
+
+function normalScaleForTexture(textureName?: string) {
+  if (isBaksteenTexture(textureName)) {
+    return new THREE.Vector2(0.5, 0.5);
+  }
+
+  if (isGipsplaatTexture(textureName)) {
+    return new THREE.Vector2(0.2, 0.2);
+  }
+
+  if (isGlaswolTexture(textureName)) {
+    return new THREE.Vector2(0.34, 0.34);
+  }
+
+  return new THREE.Vector2(0.25, 0.25);
+}
+
 function ProceduralWallMaterial({ color, texture, textureRepeatX }: WallMaterialProps) {
   const textureMap = useMemo(() => makeNoiseTexture(color, texture), [color, texture]);
   const aoMap = useMemo(() => makeAmbientOcclusionTexture(), []);
@@ -566,15 +626,25 @@ function ProceduralWallMaterial({ color, texture, textureRepeatX }: WallMaterial
   );
 }
 
-function ImageWallMaterial({ texture, textureRepeatX, textureRepeatY }: WallMaterialProps) {
+type ImageWallMaterialBaseProps = WallMaterialProps & {
+  normalMap?: THREE.Texture;
+};
+
+function ImageWallMaterialBase({ texture, textureRepeatX, textureRepeatY, normalMap }: ImageWallMaterialBaseProps) {
   const loadedTexture = useLoader(THREE.TextureLoader, texture ?? '');
   const textureMap = useMemo(() => makeAdjustedImageTexture(loadedTexture, texture), [loadedTexture, texture]);
   const bumpMap = useMemo(() => makeAdjustedImageTexture(loadedTexture, texture), [loadedTexture, texture]);
   const aoMap = useMemo(() => makeAmbientOcclusionTexture(), []);
   const settings = materialSettings(texture);
+  const normalScale = useMemo(() => normalScaleForTexture(texture), [texture]);
 
   configureWallTexture(textureMap, textureRepeatX, textureRepeatY);
   configureWallTexture(bumpMap, textureRepeatX, textureRepeatY);
+
+  if (normalMap) {
+    normalMap.colorSpace = THREE.NoColorSpace;
+    configureWallTexture(normalMap, textureRepeatX, textureRepeatY);
+  }
 
   return (
     <meshStandardMaterial
@@ -582,14 +652,33 @@ function ImageWallMaterial({ texture, textureRepeatX, textureRepeatY }: WallMate
       map={textureMap}
       aoMap={aoMap ?? undefined}
       aoMapIntensity={isKalkzandsteenTexture(texture) ? 0.46 : 0.42}
-      bumpMap={bumpMap}
-      bumpScale={settings.bumpScale}
+      bumpMap={normalMap ? undefined : bumpMap}
+      bumpScale={normalMap ? 0 : settings.bumpScale}
+      normalMap={normalMap}
+      normalScale={normalMap ? normalScale : undefined}
       roughness={settings.roughness}
       metalness={settings.metalness}
       transparent={settings.transparent}
       opacity={settings.opacity}
     />
   );
+}
+
+function ImageWallMaterialWithNormal(props: WallMaterialProps & { normalPath: string }) {
+  const loadedNormalMap = useLoader(THREE.TextureLoader, props.normalPath);
+  const normalMap = useMemo(() => loadedNormalMap.clone(), [loadedNormalMap]);
+
+  return <ImageWallMaterialBase {...props} normalMap={normalMap} />;
+}
+
+function ImageWallMaterial(props: WallMaterialProps) {
+  const normalPath = normalMapPath(props.texture);
+
+  if (normalPath) {
+    return <ImageWallMaterialWithNormal {...props} normalPath={normalPath} />;
+  }
+
+  return <ImageWallMaterialBase {...props} />;
 }
 
 function WallBox({ width, height, depth, color, texture }: WallBoxProps) {

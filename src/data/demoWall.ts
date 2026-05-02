@@ -51,7 +51,7 @@ export const demoWall: WallAssemblyInput = {
         material: 'Plaatmateriaal',
         thicknessMm: 12.5,
         color: '#eee9df',
-        texture: 'gypsum',
+        texture: '/materials/gipsplaat/gipsplaat.png',
         visible: true,
       },
       {
@@ -60,7 +60,7 @@ export const demoWall: WallAssemblyInput = {
         material: 'Plaatmateriaal',
         thicknessMm: 12.5,
         color: '#eee9df',
-        texture: 'gypsum',
+        texture: '/materials/gipsplaat/gipsplaat.png',
         visible: true,
       },
     ],

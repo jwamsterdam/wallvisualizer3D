@@ -25,7 +25,7 @@ describe('materialLibrary', () => {
       material: 'Plaatmateriaal',
       thicknessMm: 9.5,
       color: '#eee9df',
-      texture: 'gypsum',
+      texture: '/materials/gipsplaat/gipsplaat.png',
       visible: true,
     });
   });
