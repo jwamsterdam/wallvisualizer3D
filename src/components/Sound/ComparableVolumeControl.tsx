@@ -10,7 +10,7 @@ export function ComparableVolumeControl({
   return (
     <label className="audio-volume">
       <span>
-        Vergelijkbaar volume
+        Volume
         <strong>{Math.round(volume * 100)}%</strong>
       </span>
       <input
