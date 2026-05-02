@@ -566,7 +566,7 @@ function configureWallTexture(texture: THREE.Texture, repeatX: number, repeatY: 
 
 function normalMapPath(textureName?: string) {
   if (isBaksteenTexture(textureName)) {
-    return '/materials/baksteen/baksteen-normal.png';
+    return '/materials/baksteen/baksteen-normal.webp';
   }
 
   if (isGipsplaatTexture(textureName)) {
