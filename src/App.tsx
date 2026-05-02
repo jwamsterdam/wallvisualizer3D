@@ -43,7 +43,7 @@ function App() {
     spread: -1.3,
     color: '#111111',
   });
-  const [soundMode, setSoundMode] = useState<SoundMode>('off');
+  const [soundMode, setSoundMode] = useState<SoundMode>('source');
   const [soundWave, setSoundWave] = useState<SoundWaveSettings>({
     speed: 0.15,
     depth: 2.4,
@@ -172,6 +172,8 @@ function App() {
             onSoundModeChange={setSoundMode}
             soundWave={soundWave}
             onSoundWaveChange={setSoundWave}
+            listenMode={soundMode}
+            onListenModeChange={setSoundMode}
           />
         </div>
       </div>

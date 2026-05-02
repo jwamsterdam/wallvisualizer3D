@@ -9,8 +9,8 @@ type SoundControlsProps = {
 
 export function SoundControls({ mode, onChange, settings, onSettingsChange }: SoundControlsProps) {
   const options: Array<{ value: SoundMode; label: string }> = [
-    { value: 'off', label: 'Uit' },
-    { value: 'old', label: 'Huidige muur' },
+    { value: 'source', label: 'Bron' },
+    { value: 'existing', label: 'Huidige muur' },
     { value: 'new', label: 'Nieuwe muur' },
   ];
 

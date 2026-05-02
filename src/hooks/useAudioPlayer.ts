@@ -1,109 +1,115 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AudioSample } from '../data/audioSamples';
 import { comparableGain } from '../lib/audio/player';
+import { AudioSimulationEngine } from '../lib/sound/audioEngine';
+import type { PlaybackMappingResult } from '../lib/sound/playbackMapping';
+import type { ListenMode } from '../lib/sound/types';
 
-export function useAudioPlayer(sample: AudioSample) {
+type UseAudioPlayerOptions = {
+  existingMapping?: PlaybackMappingResult;
+  nextMapping?: PlaybackMappingResult;
+};
+
+export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptions = {}) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(0.78);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const volumeRef = useRef(volume);
+  const [mode, setModeState] = useState<ListenMode>('source');
+  const engine = useMemo(() => new AudioSimulationEngine(), []);
+  const progressTimerRef = useRef<number | null>(null);
+
+  const clearProgressTimer = useCallback(() => {
+    if (progressTimerRef.current !== null) {
+      window.clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  }, []);
+
+  const refreshProgress = useCallback(() => {
+    setIsPlaying(engine.getIsPlaying());
+    setPosition(engine.getCurrentTime());
+  }, [engine]);
+
+  const startProgressTimer = useCallback(() => {
+    clearProgressTimer();
+    progressTimerRef.current = window.setInterval(refreshProgress, 120);
+  }, [clearProgressTimer, refreshProgress]);
 
   const stop = useCallback(() => {
-    const audio = audioRef.current;
-
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-
+    engine.stop();
+    clearProgressTimer();
     setIsPlaying(false);
     setPosition(0);
-  }, []);
+  }, [clearProgressTimer, engine]);
 
   const play = useCallback(async () => {
-    const audio = audioRef.current;
-
-    if (!audio) {
-      return;
-    }
-
-    audio.volume = comparableGain(volumeRef.current);
-    await audio.play();
-    setIsPlaying(true);
-  }, []);
+    await engine.play();
+    refreshProgress();
+    startProgressTimer();
+  }, [engine, refreshProgress, startProgressTimer]);
 
   const restart = useCallback(async () => {
-    const audio = audioRef.current;
-
-    if (!audio) {
-      return;
-    }
-
-    audio.currentTime = 0;
+    engine.stop();
+    setPosition(0);
     await play();
-  }, [play]);
+  }, [engine, play]);
 
-  const setVolume = useCallback((nextVolume: number) => {
-    const safeVolume = comparableGain(nextVolume);
-    volumeRef.current = safeVolume;
-    setVolumeState(safeVolume);
+  const setVolume = useCallback(
+    (nextVolume: number) => {
+      const safeVolume = comparableGain(nextVolume);
+      setVolumeState(safeVolume);
+      engine.setVolume(safeVolume);
+    },
+    [engine],
+  );
 
-    if (audioRef.current) {
-      audioRef.current.volume = safeVolume;
-    }
-  }, []);
+  const setMode = useCallback(
+    (nextMode: ListenMode) => {
+      setModeState(nextMode);
+      engine.setMode(nextMode);
+    },
+    [engine],
+  );
 
   useEffect(() => {
-    const audio = new Audio(sample.src);
-    audio.loop = true;
-    audio.preload = 'metadata';
-    audio.volume = comparableGain(volumeRef.current);
-    audioRef.current = audio;
-    setPosition(0);
+    engine.setPlaybackMappings(options.existingMapping, options.nextMapping);
+  }, [engine, options.existingMapping, options.nextMapping]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    stop();
     setDuration(0);
-    setIsPlaying(false);
 
-    const handleLoadedMetadata = () => {
-      setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
-    };
-    const handleTimeUpdate = () => {
-      setPosition(audio.currentTime);
-    };
-    const handlePlay = () => {
-      setIsPlaying(true);
-    };
-    const handlePause = () => {
-      setIsPlaying(false);
-    };
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('durationchange', handleLoadedMetadata);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
+    void engine.loadUrl(sample.src).then((sampleDuration) => {
+      if (!isCancelled) {
+        setDuration(sampleDuration);
+      }
+    });
 
     return () => {
-      audio.pause();
-      audio.removeAttribute('src');
-      audio.load();
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('durationchange', handleLoadedMetadata);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
+      isCancelled = true;
     };
-  }, [sample.src]);
+  }, [engine, sample.src, stop]);
+
+  useEffect(
+    () => () => {
+      clearProgressTimer();
+      void engine.dispose();
+    },
+    [clearProgressTimer, engine],
+  );
 
   return {
     isPlaying,
     position,
     duration,
     volume,
+    mode,
     play,
     stop,
     restart,
     setVolume,
+    setMode,
   };
 }

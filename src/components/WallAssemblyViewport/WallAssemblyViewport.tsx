@@ -935,10 +935,10 @@ function SoundWaveOverlay({
   const originY = height * 0.5;
   const maxRadius = Math.min(zoneWidth * 0.48, height * 0.46);
   const minRadius = maxRadius * 0.08;
-  const waveColor = mode === 'old' ? settings.oldColor : settings.newColor;
+  const waveColor = mode === 'existing' ? settings.oldColor : settings.newColor;
 
   useFrame(({ clock }) => {
-    if (!groupRef.current || mode === 'off') {
+    if (!groupRef.current || mode === 'source') {
       return;
     }
 
@@ -957,7 +957,7 @@ function SoundWaveOverlay({
     });
   });
 
-  if (mode === 'off') {
+  if (mode === 'source') {
     return null;
   }
 
@@ -1101,7 +1101,7 @@ function Scene({
           if (event.delta > CLICK_DRAG_THRESHOLD_PX) {
             return;
           }
-          onSoundModeChange?.('off');
+          onSoundModeChange?.('source');
         }}
       >
         <RoomSurfaces width={totalWidth} height={totalHeight} depth={totalDepth} />
@@ -1153,7 +1153,9 @@ function Scene({
           centerXMm={layer.centerXMm}
           texture={layer.texture}
           showLabel={false}
-          onSelect={() => onSoundModeChange?.(layer.renderId.startsWith('old-') ? 'old' : 'new')}
+          onSelect={() =>
+            onSoundModeChange?.(layer.renderId.startsWith('old-') ? 'existing' : 'new')
+          }
         />
       ))}
       {showLabels && data ? (
@@ -1189,7 +1191,7 @@ export function WallAssemblyViewport({
   showLabels = true,
   minVisualThicknessMm = DEFAULT_MIN_VISUAL_THICKNESS_MM,
   groundShadow = DEFAULT_GROUND_SHADOW,
-  soundMode = 'off',
+  soundMode = 'source',
   onSoundModeChange,
   soundWave = DEFAULT_SOUND_WAVE,
 }: WallAssemblyViewportProps) {
@@ -1210,7 +1212,7 @@ export function WallAssemblyViewport({
           : 0;
 
         if (dragDistance <= CLICK_DRAG_THRESHOLD_PX) {
-          onSoundModeChange?.('off');
+          onSoundModeChange?.('source');
         }
       }}
       onCreated={({ gl }) => {
