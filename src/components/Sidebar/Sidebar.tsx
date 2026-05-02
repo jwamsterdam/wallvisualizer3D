@@ -8,7 +8,7 @@ import type {
 } from '../../types';
 import { ComposerPanel } from './ComposerPanel';
 import { SettingsPanel } from './SettingsPanel';
-import { SimulatorPanel } from './SimulatorPanel';
+import { ListenPanel } from '../Sound';
 import type { SidebarTab } from './types';
 
 export type SidebarProps = {
@@ -84,7 +84,7 @@ export function Sidebar({
           onMoveLayer={onMoveLayer}
         />
       ) : null}
-      {activeTab === 'simulator' ? <SimulatorPanel /> : null}
+      {activeTab === 'simulator' ? <ListenPanel /> : null}
     </aside>
   );
 }
