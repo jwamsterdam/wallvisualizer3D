@@ -46,4 +46,19 @@ describe('materialLibrary', () => {
       texture: 'air',
     });
   });
+
+  it('uses webp texture pairs for image-backed materials', () => {
+    const imageMaterials = materialLibrary
+      .map((material) => createLayerFromMaterial(material, material.id))
+      .filter((layer) => layer.texture?.startsWith('/materials/'));
+
+    expect(imageMaterials.length).toBeGreaterThan(0);
+
+    for (const layer of imageMaterials) {
+      expect(layer.texture).toMatch(/\.webp$/);
+
+      const normalPath = layer.texture!.replace(/\/([^/]+)\.webp$/, '/$1-normal.webp');
+      expect(normalPath).toMatch(/\/materials\/[^/]+\/[^/]+-normal\.webp$/);
+    }
+  });
 });

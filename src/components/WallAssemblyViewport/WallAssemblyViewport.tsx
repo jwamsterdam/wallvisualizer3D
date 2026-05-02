@@ -19,26 +19,6 @@ const DEFAULT_MIN_VISUAL_THICKNESS_MM = 24;
 const TEXTURE_ANISOTROPY = 8;
 const WALL_TEXTURE_HEIGHT_MM = 2800;
 const WALL_TEXTURE_WIDTH_MM = 1400;
-const KALKSANDSTONE_TEXTURE_WIDTH_MM = 1710;
-const KALKSANDSTONE_TEXTURE_HEIGHT_MM = 1596;
-const BRICK_TEXTURE_WIDTH_MM = 1100;
-const BRICK_TEXTURE_HEIGHT_MM = 1200;
-const CONCRETE_TEXTURE_WIDTH_MM = 1500;
-const CONCRETE_TEXTURE_HEIGHT_MM = 1400;
-const GYPSUM_TEXTURE_WIDTH_MM = 2400;
-const GYPSUM_TEXTURE_HEIGHT_MM = 2800;
-const GLASS_WOOL_TEXTURE_WIDTH_MM = 750;
-const GLASS_WOOL_TEXTURE_HEIGHT_MM = 700;
-const OSB_TEXTURE_WIDTH_MM = 4898;
-const OSB_TEXTURE_HEIGHT_MM = 4590;
-const MULTIPLEX_TEXTURE_WIDTH_MM = 1500;
-const MULTIPLEX_TEXTURE_HEIGHT_MM = 1400;
-const MDF_TEXTURE_WIDTH_MM = 1500;
-const MDF_TEXTURE_HEIGHT_MM = 1400;
-const STUCCO_TEXTURE_WIDTH_MM = 1500;
-const STUCCO_TEXTURE_HEIGHT_MM = 1400;
-const STONE_WOOL_TEXTURE_WIDTH_MM = 1200;
-const STONE_WOOL_TEXTURE_HEIGHT_MM = 1200;
 const BRICK_WIDTH_MM = 210;
 const BRICK_HEIGHT_MM = 65;
 const MORTAR_MM = 10;
@@ -135,6 +115,103 @@ type WallMaterialProps = {
   textureRepeatX: number;
   textureRepeatY: number;
 };
+
+type MaterialRenderSettings = {
+  roughness: number;
+  metalness: number;
+  transparent: boolean;
+  opacity: number;
+  bumpScale: number;
+};
+
+type ImageTextureConfig = {
+  folder: string;
+  widthMm: number;
+  heightMm: number;
+  normalScale: [number, number];
+  settings: MaterialRenderSettings;
+};
+
+const DEFAULT_MATERIAL_SETTINGS: MaterialRenderSettings = {
+  roughness: 0.78,
+  metalness: 0,
+  transparent: false,
+  opacity: 1,
+  bumpScale: 0.025,
+};
+
+const IMAGE_TEXTURE_CONFIGS: ImageTextureConfig[] = [
+  {
+    folder: 'kalkzandsteen',
+    widthMm: 1710,
+    heightMm: 1596,
+    normalScale: [0.28, 0.28],
+    settings: { roughness: 1, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.085 },
+  },
+  {
+    folder: 'baksteen',
+    widthMm: 1100,
+    heightMm: 1200,
+    normalScale: [0.5, 0.5],
+    settings: { roughness: 0.92, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.075 },
+  },
+  {
+    folder: 'beton',
+    widthMm: 1500,
+    heightMm: 1400,
+    normalScale: [0.34, 0.34],
+    settings: { roughness: 0.94, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.075 },
+  },
+  {
+    folder: 'gipsplaat',
+    widthMm: 2400,
+    heightMm: 2800,
+    normalScale: [0.2, 0.2],
+    settings: { roughness: 0.86, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.018 },
+  },
+  {
+    folder: 'glaswol',
+    widthMm: 750,
+    heightMm: 700,
+    normalScale: [0.34, 0.34],
+    settings: { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.055 },
+  },
+  {
+    folder: 'steenwol',
+    widthMm: 1200,
+    heightMm: 1200,
+    normalScale: [0.32, 0.32],
+    settings: { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.065 },
+  },
+  {
+    folder: 'osb',
+    widthMm: 4898,
+    heightMm: 4590,
+    normalScale: [0.32, 0.32],
+    settings: { roughness: 0.78, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.025 },
+  },
+  {
+    folder: 'multiplex',
+    widthMm: 1500,
+    heightMm: 1400,
+    normalScale: [0.26, 0.26],
+    settings: { roughness: 0.78, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.025 },
+  },
+  {
+    folder: 'mdf',
+    widthMm: 1500,
+    heightMm: 1400,
+    normalScale: [0.2, 0.2],
+    settings: { roughness: 0.78, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.025 },
+  },
+  {
+    folder: 'stucwerk',
+    widthMm: 1500,
+    heightMm: 1400,
+    normalScale: [0.16, 0.16],
+    settings: { roughness: 0.9, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.02 },
+  },
+];
 
 function makeNoiseTexture(color: string, textureName = 'default') {
   const canvas = document.createElement('canvas');
@@ -448,32 +525,10 @@ function makeInfinitySurfaceTexture(
 }
 
 function materialSettings(textureName?: string) {
-  if (textureName?.startsWith('/materials/kalkzandsteen/')) {
-    return { roughness: 1, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.085 };
-  }
+  const imageConfig = imageTextureConfig(textureName);
 
-  if (textureName?.startsWith('/materials/baksteen/')) {
-    return { roughness: 0.92, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.075 };
-  }
-
-  if (textureName?.startsWith('/materials/beton/')) {
-    return { roughness: 0.94, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.075 };
-  }
-
-  if (textureName?.startsWith('/materials/gipsplaat/')) {
-    return { roughness: 0.86, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.018 };
-  }
-
-  if (textureName?.startsWith('/materials/glaswol/')) {
-    return { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.055 };
-  }
-
-  if (textureName?.startsWith('/materials/steenwol/')) {
-    return { roughness: 0.98, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.065 };
-  }
-
-  if (textureName?.startsWith('/materials/stucwerk/')) {
-    return { roughness: 0.9, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.02 };
+  if (imageConfig) {
+    return imageConfig.settings;
   }
 
   switch (textureName) {
@@ -486,100 +541,21 @@ function materialSettings(textureName?: string) {
     case 'gypsum':
       return { roughness: 0.82, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.018 };
     default:
-      return { roughness: 0.78, metalness: 0, transparent: false, opacity: 1, bumpScale: 0.025 };
+      return DEFAULT_MATERIAL_SETTINGS;
   }
 }
 
-function isKalkzandsteenTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/kalkzandsteen/');
-}
-
-function isBaksteenTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/baksteen/');
-}
-
-function isConcreteTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/beton/');
-}
-
-function isGipsplaatTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/gipsplaat/');
-}
-
-function isOsbTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/osb/');
-}
-
-function isMultiplexTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/multiplex/');
-}
-
-function isMdfTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/mdf/');
-}
-
-function isStucwerkTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/stucwerk/');
-}
-
-function isGlaswolTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/glaswol/');
-}
-
-function isStoneWoolTexture(textureName?: string) {
-  return textureName?.startsWith('/materials/steenwol/');
-}
-
-function imageMaterialTint(textureName?: string) {
-  if (isKalkzandsteenTexture(textureName)) {
-    return '#ffffff';
-  }
-
-  return '#ffffff';
+function imageTextureConfig(textureName?: string) {
+  return IMAGE_TEXTURE_CONFIGS.find((config) => textureName?.startsWith(`/materials/${config.folder}/`));
 }
 
 function imageTextureSizeMm(textureName?: string) {
-  if (isBaksteenTexture(textureName)) {
-    return { widthMm: BRICK_TEXTURE_WIDTH_MM, heightMm: BRICK_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isConcreteTexture(textureName)) {
-    return { widthMm: CONCRETE_TEXTURE_WIDTH_MM, heightMm: CONCRETE_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isGipsplaatTexture(textureName)) {
-    return { widthMm: GYPSUM_TEXTURE_WIDTH_MM, heightMm: GYPSUM_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isOsbTexture(textureName)) {
-    return { widthMm: OSB_TEXTURE_WIDTH_MM, heightMm: OSB_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isMultiplexTexture(textureName)) {
-    return { widthMm: MULTIPLEX_TEXTURE_WIDTH_MM, heightMm: MULTIPLEX_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isMdfTexture(textureName)) {
-    return { widthMm: MDF_TEXTURE_WIDTH_MM, heightMm: MDF_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isStucwerkTexture(textureName)) {
-    return { widthMm: STUCCO_TEXTURE_WIDTH_MM, heightMm: STUCCO_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isGlaswolTexture(textureName)) {
-    return { widthMm: GLASS_WOOL_TEXTURE_WIDTH_MM, heightMm: GLASS_WOOL_TEXTURE_HEIGHT_MM };
-  }
-
-  if (isStoneWoolTexture(textureName)) {
-    return { widthMm: STONE_WOOL_TEXTURE_WIDTH_MM, heightMm: STONE_WOOL_TEXTURE_HEIGHT_MM };
-  }
-
-  return { widthMm: KALKSANDSTONE_TEXTURE_WIDTH_MM, heightMm: KALKSANDSTONE_TEXTURE_HEIGHT_MM };
+  const config = imageTextureConfig(textureName) ?? IMAGE_TEXTURE_CONFIGS[0];
+  return { widthMm: config.widthMm, heightMm: config.heightMm };
 }
 
 function makeAdjustedImageTexture(source: THREE.Texture, textureName?: string) {
-  if (!isKalkzandsteenTexture(textureName)) {
+  if (!textureName?.startsWith('/materials/kalkzandsteen/')) {
     return source.clone();
   }
 
@@ -627,91 +603,13 @@ function configureWallTexture(texture: THREE.Texture, repeatX: number, repeatY: 
 }
 
 function normalMapPath(textureName?: string) {
-  if (isKalkzandsteenTexture(textureName)) {
-    return '/materials/kalkzandsteen/kalkzandsteen-normal.webp';
-  }
-
-  if (isBaksteenTexture(textureName)) {
-    return '/materials/baksteen/baksteen-normal.webp';
-  }
-
-  if (isConcreteTexture(textureName)) {
-    return '/materials/beton/beton-normal.webp';
-  }
-
-  if (isGipsplaatTexture(textureName)) {
-    return '/materials/gipsplaat/gipsplaat-normal.webp';
-  }
-
-  if (isOsbTexture(textureName)) {
-    return '/materials/osb/osb-normal.webp';
-  }
-
-  if (isMultiplexTexture(textureName)) {
-    return '/materials/multiplex/multiplex-normal.webp';
-  }
-
-  if (isMdfTexture(textureName)) {
-    return '/materials/mdf/mdf-normal.webp';
-  }
-
-  if (isStucwerkTexture(textureName)) {
-    return '/materials/stucwerk/stucwerk-normal.webp';
-  }
-
-  if (isGlaswolTexture(textureName)) {
-    return '/materials/glaswol/glaswol-normal.webp';
-  }
-
-  if (isStoneWoolTexture(textureName)) {
-    return '/materials/steenwol/steenwol-normal.webp';
-  }
-
-  return undefined;
+  const config = imageTextureConfig(textureName);
+  return config ? `/materials/${config.folder}/${config.folder}-normal.webp` : undefined;
 }
 
 function normalScaleForTexture(textureName?: string) {
-  if (isKalkzandsteenTexture(textureName)) {
-    return new THREE.Vector2(0.28, 0.28);
-  }
-
-  if (isBaksteenTexture(textureName)) {
-    return new THREE.Vector2(0.5, 0.5);
-  }
-
-  if (isConcreteTexture(textureName)) {
-    return new THREE.Vector2(0.34, 0.34);
-  }
-
-  if (isGipsplaatTexture(textureName)) {
-    return new THREE.Vector2(0.2, 0.2);
-  }
-
-  if (isOsbTexture(textureName)) {
-    return new THREE.Vector2(0.32, 0.32);
-  }
-
-  if (isMultiplexTexture(textureName)) {
-    return new THREE.Vector2(0.26, 0.26);
-  }
-
-  if (isMdfTexture(textureName)) {
-    return new THREE.Vector2(0.2, 0.2);
-  }
-
-  if (isStucwerkTexture(textureName)) {
-    return new THREE.Vector2(0.16, 0.16);
-  }
-
-  if (isGlaswolTexture(textureName)) {
-    return new THREE.Vector2(0.34, 0.34);
-  }
-
-  if (isStoneWoolTexture(textureName)) {
-    return new THREE.Vector2(0.32, 0.32);
-  }
-
-  return new THREE.Vector2(0.25, 0.25);
+  const [x, y] = imageTextureConfig(textureName)?.normalScale ?? [0.25, 0.25];
+  return new THREE.Vector2(x, y);
 }
 
 function ProceduralWallMaterial({ color, texture, textureRepeatX }: WallMaterialProps) {
@@ -780,10 +678,10 @@ function ImageWallMaterialBase({ texture, textureRepeatX, textureRepeatY, normal
 
   return (
     <meshStandardMaterial
-      color={imageMaterialTint(texture)}
+      color="#ffffff"
       map={textureMap}
       aoMap={aoMap ?? undefined}
-      aoMapIntensity={isKalkzandsteenTexture(texture) ? 0.46 : 0.42}
+      aoMapIntensity={texture?.startsWith('/materials/kalkzandsteen/') ? 0.46 : 0.42}
       bumpMap={bumpMap}
       bumpScale={normalMap ? 0 : settings.bumpScale}
       normalMap={normalMap}
