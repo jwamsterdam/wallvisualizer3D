@@ -627,24 +627,38 @@ function ProceduralWallMaterial({ color, texture, textureRepeatX }: WallMaterial
 }
 
 type ImageWallMaterialBaseProps = WallMaterialProps & {
-  normalMap?: THREE.Texture;
+  normalSource?: THREE.Texture;
 };
 
-function ImageWallMaterialBase({ texture, textureRepeatX, textureRepeatY, normalMap }: ImageWallMaterialBaseProps) {
+function ImageWallMaterialBase({ texture, textureRepeatX, textureRepeatY, normalSource }: ImageWallMaterialBaseProps) {
   const loadedTexture = useLoader(THREE.TextureLoader, texture ?? '');
-  const textureMap = useMemo(() => makeAdjustedImageTexture(loadedTexture, texture), [loadedTexture, texture]);
-  const bumpMap = useMemo(() => makeAdjustedImageTexture(loadedTexture, texture), [loadedTexture, texture]);
+  const textureMap = useMemo(() => {
+    const map = makeAdjustedImageTexture(loadedTexture, texture);
+    configureWallTexture(map, textureRepeatX, textureRepeatY);
+    return map;
+  }, [loadedTexture, texture, textureRepeatX, textureRepeatY]);
+  const normalMap = useMemo(() => {
+    if (!normalSource) {
+      return undefined;
+    }
+
+    const map = normalSource.clone();
+    map.colorSpace = THREE.NoColorSpace;
+    configureWallTexture(map, textureRepeatX, textureRepeatY);
+    return map;
+  }, [normalSource, textureRepeatX, textureRepeatY]);
+  const bumpMap = useMemo(() => {
+    if (normalMap) {
+      return undefined;
+    }
+
+    const map = makeAdjustedImageTexture(loadedTexture, texture);
+    configureWallTexture(map, textureRepeatX, textureRepeatY);
+    return map;
+  }, [loadedTexture, normalMap, texture, textureRepeatX, textureRepeatY]);
   const aoMap = useMemo(() => makeAmbientOcclusionTexture(), []);
   const settings = materialSettings(texture);
   const normalScale = useMemo(() => normalScaleForTexture(texture), [texture]);
-
-  configureWallTexture(textureMap, textureRepeatX, textureRepeatY);
-  configureWallTexture(bumpMap, textureRepeatX, textureRepeatY);
-
-  if (normalMap) {
-    normalMap.colorSpace = THREE.NoColorSpace;
-    configureWallTexture(normalMap, textureRepeatX, textureRepeatY);
-  }
 
   return (
     <meshStandardMaterial
@@ -652,7 +666,7 @@ function ImageWallMaterialBase({ texture, textureRepeatX, textureRepeatY, normal
       map={textureMap}
       aoMap={aoMap ?? undefined}
       aoMapIntensity={isKalkzandsteenTexture(texture) ? 0.46 : 0.42}
-      bumpMap={normalMap ? undefined : bumpMap}
+      bumpMap={bumpMap}
       bumpScale={normalMap ? 0 : settings.bumpScale}
       normalMap={normalMap}
       normalScale={normalMap ? normalScale : undefined}
@@ -665,10 +679,9 @@ function ImageWallMaterialBase({ texture, textureRepeatX, textureRepeatY, normal
 }
 
 function ImageWallMaterialWithNormal(props: WallMaterialProps & { normalPath: string }) {
-  const loadedNormalMap = useLoader(THREE.TextureLoader, props.normalPath);
-  const normalMap = useMemo(() => loadedNormalMap.clone(), [loadedNormalMap]);
+  const normalSource = useLoader(THREE.TextureLoader, props.normalPath);
 
-  return <ImageWallMaterialBase {...props} normalMap={normalMap} />;
+  return <ImageWallMaterialBase {...props} normalSource={normalSource} />;
 }
 
 function ImageWallMaterial(props: WallMaterialProps) {
