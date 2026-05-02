@@ -6,7 +6,6 @@ import type {
   WallAssemblyInput,
   WallLayer,
 } from '../../types';
-import type { ListenMode } from '../../lib/sound/types';
 import { ComposerPanel } from './ComposerPanel';
 import { SettingsPanel } from './SettingsPanel';
 import { ListenPanel } from '../Sound';
@@ -38,8 +37,6 @@ export type SidebarProps = {
   onSoundModeChange?: (mode: SoundMode) => void;
   soundWave: SoundWaveSettings;
   onSoundWaveChange?: (settings: SoundWaveSettings) => void;
-  listenMode: ListenMode;
-  onListenModeChange?: (mode: ListenMode) => void;
 };
 
 export function Sidebar({
@@ -60,8 +57,6 @@ export function Sidebar({
   onSoundModeChange,
   soundWave,
   onSoundWaveChange,
-  listenMode,
-  onListenModeChange,
 }: SidebarProps) {
   return (
     <aside className="legend-panel">
@@ -92,8 +87,8 @@ export function Sidebar({
       {activeTab === 'simulator' ? (
         <ListenPanel
           data={data}
-          listenMode={listenMode}
-          onListenModeChange={onListenModeChange}
+          listenMode={soundMode}
+          onListenModeChange={onSoundModeChange}
         />
       ) : null}
     </aside>

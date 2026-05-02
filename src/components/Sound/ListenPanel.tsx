@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { audioSamples } from '../../data/audioSamples';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
 import { simulateConstruction } from '../../lib/sound/acoustics';
 import { mapTlToPlaybackEq, normalizePlaybackMappingForAudition } from '../../lib/sound/playbackMapping';
 import { assemblyToSoundConstructions } from '../../lib/sound/wallAdapter';
-import type { ListenMode } from '../../lib/sound/types';
-import type { WallAssemblyInput } from '../../types';
+import type { ListenMode, WallAssemblyInput } from '../../types';
 import { AudioSamplePicker } from './AudioSamplePicker';
 import { AudioTransportControls } from './AudioTransportControls';
 import { ComparableVolumeControl } from './ComparableVolumeControl';
@@ -36,11 +35,8 @@ export function ListenPanel({ data, listenMode, onListenModeChange }: ListenPane
   const player = useAudioPlayer(selectedSample, {
     existingMapping: playbackMappings.existing,
     nextMapping: playbackMappings.next,
+    mode: listenMode,
   });
-
-  useEffect(() => {
-    player.setMode(listenMode);
-  }, [listenMode, player.setMode]);
 
   return (
     <div className="sidebar-tab-panel listen-panel" role="tabpanel" aria-label="Luisteren">

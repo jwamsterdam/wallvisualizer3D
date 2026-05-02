@@ -1,3 +1,4 @@
+import { listenModeOptions } from '../../data/listenModes';
 import type { SoundMode, SoundWaveSettings } from '../../types';
 
 type SoundControlsProps = {
@@ -8,17 +9,11 @@ type SoundControlsProps = {
 };
 
 export function SoundControls({ mode, onChange, settings, onSettingsChange }: SoundControlsProps) {
-  const options: Array<{ value: SoundMode; label: string }> = [
-    { value: 'source', label: 'Bron' },
-    { value: 'existing', label: 'Huidige muur' },
-    { value: 'new', label: 'Nieuwe muur' },
-  ];
-
   return (
     <section className="sound-controls">
       <h3>Geluid visualisatie</h3>
       <div className="sound-toggle" role="group" aria-label="Geluid visualisatie">
-        {options.map((option) => (
+        {listenModeOptions.map((option) => (
           <button
             key={option.value}
             type="button"

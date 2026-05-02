@@ -3,11 +3,12 @@ import type { AudioSample } from '../data/audioSamples';
 import { comparableGain } from '../lib/audio/player';
 import { AudioSimulationEngine } from '../lib/sound/audioEngine';
 import type { PlaybackMappingResult } from '../lib/sound/playbackMapping';
-import type { ListenMode } from '../lib/sound/types';
+import type { ListenMode } from '../types';
 
 type UseAudioPlayerOptions = {
   existingMapping?: PlaybackMappingResult;
   nextMapping?: PlaybackMappingResult;
+  mode?: ListenMode;
 };
 
 export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptions = {}) {
@@ -15,7 +16,7 @@ export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptio
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(0.78);
-  const [mode, setModeState] = useState<ListenMode>('source');
+  const mode = options.mode ?? 'source';
   const engine = useMemo(() => new AudioSimulationEngine(), []);
   const progressTimerRef = useRef<number | null>(null);
 
@@ -64,17 +65,13 @@ export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptio
     [engine],
   );
 
-  const setMode = useCallback(
-    (nextMode: ListenMode) => {
-      setModeState(nextMode);
-      engine.setMode(nextMode);
-    },
-    [engine],
-  );
-
   useEffect(() => {
     engine.setPlaybackMappings(options.existingMapping, options.nextMapping);
   }, [engine, options.existingMapping, options.nextMapping]);
+
+  useEffect(() => {
+    engine.setMode(mode);
+  }, [engine, mode]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -105,11 +102,9 @@ export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptio
     position,
     duration,
     volume,
-    mode,
     play,
     stop,
     restart,
     setVolume,
-    setMode,
   };
 }

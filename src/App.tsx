@@ -172,8 +172,6 @@ function App() {
             onSoundModeChange={setSoundMode}
             soundWave={soundWave}
             onSoundWaveChange={setSoundWave}
-            listenMode={soundMode}
-            onListenModeChange={setSoundMode}
           />
         </div>
       </div>

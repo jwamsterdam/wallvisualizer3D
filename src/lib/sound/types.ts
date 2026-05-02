@@ -1,5 +1,7 @@
 import type { Material } from '../../types';
 
+export type { ListenMode } from '../../types';
+
 export interface ConstructionLayer {
   id: string;
   materialId: string;
@@ -33,5 +35,3 @@ export interface SimulationResult {
 }
 
 export type ResolvedSoundLayer = ConstructionLayer & { material: Material };
-
-export type ListenMode = 'source' | 'existing' | 'new';

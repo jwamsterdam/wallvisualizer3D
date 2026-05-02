@@ -43,7 +43,8 @@ export type GroundShadowSettings = {
   color: string;
 };
 
-export type SoundMode = 'source' | 'existing' | 'new';
+export type ListenMode = 'source' | 'existing' | 'new';
+export type SoundMode = ListenMode;
 
 export type SoundWaveSettings = {
   speed: number;
