@@ -931,7 +931,8 @@ function SoundWaveOverlay({
   const waveCount = 8;
   const activeDepth = mode === 'new' ? newDepth : oldDepth;
   const activeCenterX = mode === 'new' ? newCenterX : oldCenterX;
-  const sourceZ = activeDepth + 70 * MM_TO_UNIT;
+  const frontSourceZ = activeDepth + 70 * MM_TO_UNIT;
+  const backSourceZ = -70 * MM_TO_UNIT;
   const originY = height * 0.5;
   const maxRadius = Math.min(zoneWidth * 0.48, height * 0.46);
   const minRadius = maxRadius * 0.08;
@@ -944,11 +945,16 @@ function SoundWaveOverlay({
 
     const elapsed = clock.getElapsedTime();
     groupRef.current.children.forEach((child, index) => {
-      const progress = (elapsed * settings.speed + index / waveCount) % 1;
+      const side = index < waveCount ? 1 : -1;
+      const waveIndex = index % waveCount;
+      const progress = (elapsed * settings.speed + waveIndex / waveCount) % 1;
       const radius = minRadius + progress * (maxRadius - minRadius);
       child.scale.setScalar(radius);
       child.position.y = originY;
-      child.position.z = sourceZ + progress * settings.depth;
+      child.position.z =
+        side === 1
+          ? frontSourceZ + progress * settings.depth
+          : backSourceZ - progress * settings.depth;
       const material = (child as THREE.Mesh).material;
 
       if (material instanceof THREE.MeshBasicMaterial) {
@@ -963,7 +969,7 @@ function SoundWaveOverlay({
 
   return (
     <group ref={groupRef} position={[activeCenterX, 0, 0]}>
-      {Array.from({ length: waveCount }).map((_, index) => (
+      {Array.from({ length: waveCount * 2 }).map((_, index) => (
         <mesh key={index}>
           <ringGeometry args={[0.92, 1, 96]} />
           <meshBasicMaterial
@@ -976,14 +982,6 @@ function SoundWaveOverlay({
           />
         </mesh>
       ))}
-      <Html
-        position={[zoneWidth * 0.34, height * 0.88, sourceZ]}
-        center
-        distanceFactor={13}
-        className="sound-label"
-      >
-        Geluid door {mode === 'new' ? 'nieuwe' : 'huidige'} muur
-      </Html>
     </group>
   );
 }

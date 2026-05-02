@@ -17,7 +17,6 @@ export type SidebarProps = {
   materials: MaterialDefinition[];
   showLabels: boolean;
   onShowLabelsChange?: (showLabels: boolean) => void;
-  onScreenshot?: () => void;
   onAddLayer?: (sectionKey: keyof WallAssemblyInput, materialId: string) => void;
   onChangeLayerMaterial?: (
     sectionKey: keyof WallAssemblyInput,
@@ -45,7 +44,6 @@ export function Sidebar({
   materials,
   showLabels,
   onShowLabelsChange,
-  onScreenshot,
   onAddLayer,
   onChangeLayerMaterial,
   onUpdateLayer,
@@ -64,7 +62,6 @@ export function Sidebar({
         <SettingsPanel
           showLabels={showLabels}
           onShowLabelsChange={onShowLabelsChange}
-          onScreenshot={onScreenshot}
           groundShadow={groundShadow}
           onGroundShadowChange={onGroundShadowChange}
           soundMode={soundMode}
@@ -89,6 +86,7 @@ export function Sidebar({
           data={data}
           listenMode={soundMode}
           onListenModeChange={onSoundModeChange}
+          soundWave={soundWave}
         />
       ) : null}
     </aside>

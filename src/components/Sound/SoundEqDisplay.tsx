@@ -1,11 +1,13 @@
 import { memo } from 'react';
 import type { PlaybackMappingResult } from '../../lib/sound/playbackMapping';
 import type { FrequencyBandResult } from '../../lib/sound/types';
+import type { SoundWaveSettings } from '../../types';
 
 type SoundEqDisplayProps = {
   existingBands: FrequencyBandResult[];
   nextBands: FrequencyBandResult[];
   playbackMapping: PlaybackMappingResult;
+  colors: Pick<SoundWaveSettings, 'oldColor' | 'newColor'>;
 };
 
 function formatFrequency(frequencyHz: number) {
@@ -20,6 +22,7 @@ function SoundEqDisplayComponent({
   existingBands,
   nextBands,
   playbackMapping,
+  colors,
 }: SoundEqDisplayProps) {
   const comparedBands = existingBands.map((existingBand, index) => {
     const nextBand = nextBands[index] ?? existingBand;
@@ -44,11 +47,19 @@ function SoundEqDisplayComponent({
       <h3 id="sound-eq-title">Visual EQ</h3>
       <div className="sound-eq-legend" aria-label="Legenda transmissieverlies vergelijking">
         <span>
-          <i className="sound-eq-swatch sound-eq-swatch--existing" aria-hidden="true" />
+          <i
+            className="sound-eq-swatch"
+            style={{ backgroundColor: colors.oldColor }}
+            aria-hidden="true"
+          />
           Huidige muur
         </span>
         <span>
-          <i className="sound-eq-swatch sound-eq-swatch--new" aria-hidden="true" />
+          <i
+            className="sound-eq-swatch"
+            style={{ backgroundColor: colors.newColor }}
+            aria-hidden="true"
+          />
           Nieuwe muur
         </span>
       </div>
@@ -68,11 +79,14 @@ function SoundEqDisplayComponent({
                     {band.extraAttenuationDb.toFixed(1)}
                   </span>
                 </div>
-                <div className="sound-eq-track">
-                  <div className="sound-eq-fill sound-eq-fill--new" style={{ height: nextHeight }} />
+                  <div className="sound-eq-track">
+                  <div
+                    className="sound-eq-fill sound-eq-fill--new"
+                    style={{ backgroundColor: colors.newColor, height: nextHeight }}
+                  />
                   <div
                     className="sound-eq-fill sound-eq-fill--existing"
-                    style={{ height: existingHeight }}
+                    style={{ backgroundColor: colors.oldColor, height: existingHeight }}
                   />
                 </div>
                 <div className="sound-eq-label">{formatFrequency(band.frequencyHz)}</div>

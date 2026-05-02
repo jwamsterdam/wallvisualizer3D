@@ -116,25 +116,12 @@ function App() {
     });
   };
 
-  const handleScreenshot = () => {
-    const canvas = document.querySelector<HTMLCanvasElement>('.canvas-shell canvas');
-
-    if (!canvas) {
-      return;
-    }
-
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = `wandopbouw-${new Date().toISOString().slice(0, 10)}.png`;
-    link.click();
-  };
-
   return (
     <main className="app-shell">
       <header className="app-header">
-        <div>
-          <p className="eyebrow">Constructiewand viewer</p>
-          <h1>3D wandopbouw</h1>
+        <div className="app-title">
+          <p className="eyebrow">Last van je buren?</p>
+          <h1>Hoor hoe het klinkt met een voorzetwand</h1>
         </div>
       </header>
 
@@ -160,7 +147,6 @@ function App() {
             materials={materialLibrary}
             showLabels={showLabels}
             onShowLabelsChange={setShowLabels}
-            onScreenshot={handleScreenshot}
             onAddLayer={handleAddLayer}
             onChangeLayerMaterial={handleChangeLayerMaterial}
             onUpdateLayer={handleUpdateLayer}

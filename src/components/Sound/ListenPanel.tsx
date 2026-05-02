@@ -5,7 +5,7 @@ import { simulateConstruction } from '../../lib/sound/acoustics';
 import { designFirFilter } from '../../lib/sound/fir';
 import { mapTlToPlaybackEq, normalizePlaybackMappingForAudition } from '../../lib/sound/playbackMapping';
 import { assemblyToSoundConstructions } from '../../lib/sound/wallAdapter';
-import type { ListenMode, WallAssemblyInput } from '../../types';
+import type { ListenMode, SoundWaveSettings, WallAssemblyInput } from '../../types';
 import { AudioSamplePicker } from './AudioSamplePicker';
 import { AudioTransportControls } from './AudioTransportControls';
 import { ComparableVolumeControl } from './ComparableVolumeControl';
@@ -17,9 +17,10 @@ type ListenPanelProps = {
   data?: WallAssemblyInput;
   listenMode: ListenMode;
   onListenModeChange?: (mode: ListenMode) => void;
+  soundWave: SoundWaveSettings;
 };
 
-export function ListenPanel({ data, listenMode, onListenModeChange }: ListenPanelProps) {
+export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }: ListenPanelProps) {
   const [selectedSampleId, setSelectedSampleId] = useState(audioSamples[0]?.id ?? '');
   const selectedSample = useMemo(
     () => audioSamples.find((sample) => sample.id === selectedSampleId) ?? audioSamples[0],
@@ -94,6 +95,7 @@ export function ListenPanel({ data, listenMode, onListenModeChange }: ListenPane
         existingBands={simulationData.existingResult.bands}
         nextBands={simulationData.nextResult.bands}
         playbackMapping={inspectedPlaybackMapping}
+        colors={soundWave}
       />
 
       <PlaybackDebugPanel

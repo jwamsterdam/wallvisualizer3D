@@ -39,13 +39,27 @@ button {
   align-items: end;
   justify-content: space-between;
   gap: 18px;
+  padding: 4px 2px 2px;
+}
+
+.app-title {
+  display: grid;
+  gap: 5px;
+  max-width: min(880px, 100%);
 }
 
 .eyebrow {
-  margin: 0 0 4px;
-  color: #657381;
-  font-size: 0.82rem;
+  width: fit-content;
+  margin: 0;
+  padding: 4px 9px;
+  border: 1px solid rgb(37 49 61 / 12%);
+  border-radius: 999px;
+  color: #334250;
+  background: rgb(255 255 255 / 72%);
+  box-shadow: 0 8px 22px rgb(37 49 61 / 8%);
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -58,8 +72,19 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(1.5rem, 2.6vw, 2.4rem);
-  line-height: 0.98;
+  color: #1d252d;
+  font-family: "Segoe UI Variable Display", "SF Pro Display", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.65rem, 3.1vw, 3rem);
+  font-weight: 800;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.app-title h1 {
+  background: linear-gradient(90deg, #1d252d 0%, #31475a 48%, #0f766e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .wall-viewer {
@@ -592,14 +617,6 @@ h1 {
   border-radius: 3px;
 }
 
-.sound-eq-swatch--existing {
-  background: #f59e0b;
-}
-
-.sound-eq-swatch--new {
-  background: #22c55e;
-}
-
 .sound-eq-scroll,
 .playback-debug-table-wrap {
   overflow-x: auto;
@@ -667,12 +684,10 @@ h1 {
 
 .sound-eq-fill--existing {
   left: 18%;
-  background: rgb(245 158 11 / 86%);
 }
 
 .sound-eq-fill--new {
   right: 18%;
-  background: rgb(34 197 94 / 72%);
 }
 
 .sound-eq-label {
@@ -791,23 +806,6 @@ h1 {
   accent-color: #25313d;
 }
 
-.secondary-button {
-  width: 100%;
-  min-height: 36px;
-  margin-top: 12px;
-  border: 1px solid rgb(37 49 61 / 10%);
-  border-radius: 6px;
-  color: #25313d;
-  background: #f3f6f8;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.secondary-button:hover {
-  background: #e9eef2;
-}
-
 .sound-toggle {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -923,19 +921,6 @@ h1 {
   font-size: 1.08rem;
   font-style: normal;
   font-weight: 800;
-}
-
-.sound-label {
-  pointer-events: none;
-  padding: 6px 9px;
-  border: 1px solid rgb(37 49 61 / 16%);
-  border-radius: 999px;
-  color: #1f2a35;
-  background: rgb(255 255 255 / 82%);
-  box-shadow: 0 8px 22px rgb(29 37 45 / 12%);
-  font-size: 0.74rem;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
