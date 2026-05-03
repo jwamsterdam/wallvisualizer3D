@@ -4,13 +4,8 @@ import type { ListenMode } from './types';
 
 interface PlaybackNodes {
   source: AudioBufferSourceNode;
-  existingSource: AudioBufferSourceNode;
-  nextSource?: AudioBufferSourceNode;
-  sourceGain: GainNode;
-  existingGain: GainNode;
-  nextGain?: GainNode;
-  existingConvolver: ConvolverNode;
-  nextConvolver?: ConvolverNode;
+  gain: GainNode;
+  convolver?: ConvolverNode;
 }
 
 const MAX_DECODED_URL_CACHE_ENTRIES = 4;
@@ -65,9 +60,7 @@ export class AudioSimulationEngine {
     }
 
     const now = this.context.currentTime;
-    this.nodes.sourceGain.gain.setTargetAtTime(this.mode === 'source' ? this.volume : 0, now, 0.015);
-    this.nodes.existingGain.gain.setTargetAtTime(this.mode === 'existing' ? this.volume : 0, now, 0.015);
-    this.nodes.nextGain?.gain.setTargetAtTime(this.mode === 'new' ? this.volume : 0, now, 0.015);
+    this.nodes.gain.gain.setTargetAtTime(this.volume, now, 0.015);
   }
 
   setPlaybackMappings(existingMapping?: PlaybackMappingResult, nextMapping?: PlaybackMappingResult): void {
@@ -92,12 +85,15 @@ export class AudioSimulationEngine {
   }
 
   setMode(mode: ListenMode): void {
-    this.mode = mode;
-    if (!this.nodes) {
+    if (this.mode === mode) {
       return;
     }
 
-    this.setVolume(this.volume);
+    this.mode = mode;
+
+    if (this.nodes && this.playing) {
+      this.rebuildGraphAtCurrentTime();
+    }
   }
 
   async play(): Promise<void> {
@@ -115,8 +111,6 @@ export class AudioSimulationEngine {
     this.startedAt = context.currentTime - offset;
     this.playing = true;
     this.nodes.source.start(0, offset);
-    this.nodes.existingSource.start(0, offset);
-    this.nodes.nextSource?.start(0, offset);
     this.nodes.source.onended = () => {
       if (this.playing && this.getCurrentTime() >= (this.buffer?.duration ?? 0) - 0.05) {
         this.stop();
@@ -196,49 +190,50 @@ export class AudioSimulationEngine {
     }
 
     const source = context.createBufferSource();
-    const existingSource = context.createBufferSource();
     source.buffer = this.buffer;
-    existingSource.buffer = this.buffer;
 
-    const sourceGain = context.createGain();
-    const existingGain = context.createGain();
-    sourceGain.gain.value = this.mode === 'source' ? this.volume : 0;
-    existingGain.gain.value = this.mode === 'existing' ? this.volume : 0;
-    source.connect(sourceGain).connect(context.destination);
+    const gain = context.createGain();
+    gain.gain.value = this.volume;
 
-    const existingConvolver = context.createConvolver();
-    existingConvolver.normalize = false;
-    if (this.existingFirDesign) {
-      existingConvolver.buffer = this.getImpulseBuffer(context, this.existingFirDesign);
-    }
-    existingSource.connect(existingConvolver).connect(existingGain).connect(context.destination);
+    const firDesign = this.getActiveFirDesign(context);
+    let convolver: ConvolverNode | undefined;
 
-    let nextSource: AudioBufferSourceNode | undefined;
-    let nextGain: GainNode | undefined;
-    let nextConvolver: ConvolverNode | undefined;
-    if (this.nextMapping) {
-      nextSource = context.createBufferSource();
-      nextSource.buffer = this.buffer;
-      nextGain = context.createGain();
-      nextGain.gain.value = this.mode === 'new' ? this.volume : 0;
-      const nextFirDesign = this.nextFirDesign ?? designFirFilter(this.nextMapping, context.sampleRate, DEFAULT_IMPULSE_LENGTH);
-      this.nextFirDesign = nextFirDesign;
-      nextConvolver = context.createConvolver();
-      nextConvolver.normalize = false;
-      nextConvolver.buffer = this.getImpulseBuffer(context, nextFirDesign);
-      nextSource.connect(nextConvolver).connect(nextGain).connect(context.destination);
+    if (firDesign) {
+      convolver = context.createConvolver();
+      convolver.normalize = false;
+      convolver.buffer = this.getImpulseBuffer(context, firDesign);
+      source.connect(convolver).connect(gain).connect(context.destination);
+    } else {
+      source.connect(gain).connect(context.destination);
     }
 
     return {
       source,
-      existingSource,
-      nextSource,
-      sourceGain,
-      existingGain,
-      nextGain,
-      existingConvolver,
-      nextConvolver,
+      gain,
+      convolver,
     };
+  }
+
+  private getActiveFirDesign(context: AudioContext): FirDesignResult | undefined {
+    if (this.mode === 'existing') {
+      this.existingFirDesign =
+        this.existingFirDesign ??
+        (this.existingMapping
+          ? designFirFilter(this.existingMapping, context.sampleRate, DEFAULT_IMPULSE_LENGTH)
+          : undefined);
+      return this.existingFirDesign;
+    }
+
+    if (this.mode === 'new') {
+      this.nextFirDesign =
+        this.nextFirDesign ??
+        (this.nextMapping
+          ? designFirFilter(this.nextMapping, context.sampleRate, DEFAULT_IMPULSE_LENGTH)
+          : undefined);
+      return this.nextFirDesign;
+    }
+
+    return undefined;
   }
 
   private stopSources(): void {
@@ -251,8 +246,6 @@ export class AudioSimulationEngine {
     nodes.source.onended = null;
     try {
       nodes.source.stop();
-      nodes.existingSource.stop();
-      nodes.nextSource?.stop();
     } catch {
       // Sources may already have ended.
     }
@@ -309,16 +302,10 @@ export class AudioSimulationEngine {
 
 function disconnectPlaybackNodes(nodes: PlaybackNodes): void {
   safeDisconnect(nodes.source);
-  safeDisconnect(nodes.existingSource);
-  safeDisconnect(nodes.nextSource);
-  safeDisconnect(nodes.sourceGain);
-  safeDisconnect(nodes.existingGain);
-  safeDisconnect(nodes.nextGain);
-  nodes.existingConvolver.buffer = null;
-  safeDisconnect(nodes.existingConvolver);
-  if (nodes.nextConvolver) {
-    nodes.nextConvolver.buffer = null;
-    safeDisconnect(nodes.nextConvolver);
+  safeDisconnect(nodes.gain);
+  if (nodes.convolver) {
+    nodes.convolver.buffer = null;
+    safeDisconnect(nodes.convolver);
   }
 }
 

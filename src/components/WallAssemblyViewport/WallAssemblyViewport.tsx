@@ -16,7 +16,7 @@ const MM_TO_UNIT = 0.012;
 const DEFAULT_WIDTH_MM = 2600;
 const DEFAULT_HEIGHT_MM = 1600;
 const DEFAULT_MIN_VISUAL_THICKNESS_MM = 24;
-const TEXTURE_ANISOTROPY = 8;
+const TEXTURE_ANISOTROPY = 4;
 const WALL_TEXTURE_HEIGHT_MM = 2800;
 const WALL_TEXTURE_WIDTH_MM = 1400;
 const BRICK_WIDTH_MM = 210;
@@ -928,7 +928,7 @@ function SoundWaveOverlay({
   newDepth,
 }: SoundWaveOverlayProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const waveCount = 8;
+  const waveCount = 5;
   const activeDepth = mode === 'new' ? newDepth : oldDepth;
   const activeCenterX = mode === 'new' ? newCenterX : oldCenterX;
   const frontSourceZ = activeDepth + 70 * MM_TO_UNIT;
@@ -1090,8 +1090,8 @@ function Scene({
         position={[-16, 19, 16]}
         intensity={2.18}
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-bias={-0.00015}
       />
       <directionalLight position={[12, 9, -10]} intensity={0.12} color="#f7fbff" />
@@ -1196,12 +1196,17 @@ export function WallAssemblyViewport({
   soundWave = DEFAULT_SOUND_WAVE,
 }: WallAssemblyViewportProps) {
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
+  const isMobileViewport =
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches;
 
   return (
     <Canvas
       shadows
-      dpr={[1, 1.8]}
-      gl={{ preserveDrawingBuffer: true }}
+      dpr={isMobileViewport ? [0.75, 1.15] : [1, 1.6]}
+      gl={{
+        antialias: !isMobileViewport,
+        powerPreference: 'high-performance',
+      }}
       onPointerDown={(event) => {
         pointerDownRef.current = { x: event.clientX, y: event.clientY };
       }}
