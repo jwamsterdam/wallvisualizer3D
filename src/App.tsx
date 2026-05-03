@@ -74,6 +74,14 @@ function App() {
     setAutoPlayRequestId((requestId) => requestId + 1);
   };
 
+  const handleSoundModeChange = (mode: SoundMode) => {
+    setSoundMode(mode);
+
+    if (!audioPlayer.isPlaying) {
+      setAutoPlayRequestId((requestId) => requestId + 1);
+    }
+  };
+
   const updateSectionLayers = (
     sectionKey: WallSectionKey,
     updater: (layers: WallLayer[]) => WallLayer[],
@@ -179,7 +187,7 @@ function App() {
                   key={option.value}
                   type="button"
                   className={soundMode === option.value ? 'active' : ''}
-                  onClick={() => setSoundMode(option.value)}
+                onClick={() => handleSoundModeChange(option.value)}
                 >
                   {option.label}
                 </button>
@@ -194,7 +202,7 @@ function App() {
             minVisualThicknessMm={24}
             groundShadow={groundShadow}
             soundMode={soundMode}
-            onSoundModeChange={setSoundMode}
+            onSoundModeChange={handleSoundModeChange}
             soundWave={soundWave}
           />
         </div>
@@ -215,7 +223,7 @@ function App() {
             groundShadow={groundShadow}
             onGroundShadowChange={setGroundShadow}
             soundMode={soundMode}
-            onSoundModeChange={setSoundMode}
+            onSoundModeChange={handleSoundModeChange}
             onSelectSample={handleSelectSample}
             selectedSampleId={selectedSampleId}
             simulationData={simulationData}
