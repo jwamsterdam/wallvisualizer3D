@@ -9,6 +9,7 @@ type UseAudioPlayerOptions = {
   existingMapping?: PlaybackMappingResult;
   nextMapping?: PlaybackMappingResult;
   mode?: ListenMode;
+  autoPlayRequestId?: number;
 };
 
 export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptions = {}) {
@@ -81,13 +82,29 @@ export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptio
     void engine.loadUrl(sample.src).then((sampleDuration) => {
       if (!isCancelled) {
         setDuration(sampleDuration);
+
+        if (options.autoPlayRequestId && options.autoPlayRequestId > 0) {
+          void engine.play().then(() => {
+            if (!isCancelled) {
+              refreshProgress();
+              startProgressTimer();
+            }
+          });
+        }
       }
     });
 
     return () => {
       isCancelled = true;
     };
-  }, [engine, sample.src, stop]);
+  }, [
+    engine,
+    options.autoPlayRequestId,
+    refreshProgress,
+    sample.src,
+    startProgressTimer,
+    stop,
+  ]);
 
   useEffect(
     () => () => {

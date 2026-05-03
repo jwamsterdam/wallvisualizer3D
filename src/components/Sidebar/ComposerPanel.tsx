@@ -226,7 +226,9 @@ export function ComposerPanel({
                       }}
                     >
                       <span className="composer-drag-handle" aria-hidden="true">
-                        ::
+                        <svg viewBox="0 0 16 20" focusable="false">
+                          <path d="M8 1.75 4.75 5h2.1v10h-2.1L8 18.25 11.25 15h-2.1V5h2.1L8 1.75Z" />
+                        </svg>
                       </span>
                       <span
                         className={[

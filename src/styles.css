@@ -5,6 +5,8 @@
   background: #e9eef2;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -226,14 +228,19 @@ h1 {
 }
 
 .composer-drag-handle {
+  display: grid;
+  place-items: center;
   grid-column: 1;
   grid-row: 2;
   align-self: center;
   color: #7b8794;
   cursor: grab;
-  font-weight: 900;
-  letter-spacing: -2px;
-  transform: rotate(90deg);
+}
+
+.composer-drag-handle svg {
+  width: 16px;
+  height: 20px;
+  fill: currentColor;
 }
 
 .composer-layer .legend-swatch {
@@ -709,24 +716,49 @@ h1 {
 }
 
 .playback-debug-panel {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
   background: rgb(248 250 251 / 78%);
+  contain: layout paint;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+.playback-debug-panel:not([open]) {
+  overflow: hidden;
 }
 
 .playback-debug-panel summary {
+  max-width: 100%;
   cursor: pointer;
   color: #26323d;
   font-size: 0.86rem;
   font-weight: 700;
+  line-height: 1.25;
 }
 
 .playback-debug-panel[open] summary {
   margin-bottom: 10px;
 }
 
+.playback-debug-content {
+  display: grid;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.72rem;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
 .playback-debug-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .playback-debug-grid div {
@@ -742,6 +774,7 @@ h1 {
 .playback-debug-grid span {
   color: #667381;
   font-size: 0.68rem;
+  line-height: 1.2;
 }
 
 .playback-debug-grid strong {
@@ -749,6 +782,7 @@ h1 {
   overflow-wrap: anywhere;
   color: #1d252d;
   font-size: 0.72rem;
+  line-height: 1.22;
   font-variant-numeric: tabular-nums;
 }
 
@@ -759,6 +793,7 @@ h1 {
   border-collapse: collapse;
   color: #3c4955;
   font-size: 0.7rem;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 

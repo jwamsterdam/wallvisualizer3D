@@ -22,6 +22,7 @@ type ListenPanelProps = {
 
 export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }: ListenPanelProps) {
   const [selectedSampleId, setSelectedSampleId] = useState(audioSamples[0]?.id ?? '');
+  const [autoPlayRequestId, setAutoPlayRequestId] = useState(0);
   const selectedSample = useMemo(
     () => audioSamples.find((sample) => sample.id === selectedSampleId) ?? audioSamples[0],
     [selectedSampleId],
@@ -54,7 +55,13 @@ export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }:
     existingMapping: simulationData.existingAuditionMapping,
     nextMapping: simulationData.nextAuditionMapping,
     mode: listenMode,
+    autoPlayRequestId,
   });
+
+  const handleSelectSample = (sampleId: string) => {
+    setSelectedSampleId(sampleId);
+    setAutoPlayRequestId((requestId) => requestId + 1);
+  };
 
   return (
     <div className="sidebar-tab-panel listen-panel" role="tabpanel" aria-label="Luisteren">
@@ -63,7 +70,7 @@ export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }:
         <AudioSamplePicker
           samples={audioSamples}
           selectedSampleId={selectedSample.id}
-          onSelectSample={setSelectedSampleId}
+          onSelectSample={handleSelectSample}
         />
       </section>
 
