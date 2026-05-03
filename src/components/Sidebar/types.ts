@@ -8,6 +8,6 @@ export type SidebarTabItem = {
 
 export const sidebarTabs: SidebarTabItem[] = [
   { id: 'composer', label: 'Bouw je muur' },
-  { id: 'simulator', label: 'Luister naar het geluid' },
+  { id: 'simulator', label: 'Hoor het verschil' },
   { id: 'settings', label: 'Instellingen', icon: 'settings' },
 ];

@@ -12,7 +12,21 @@ type UseAudioPlayerOptions = {
   autoPlayRequestId?: number;
 };
 
-export function useAudioPlayer(sample: AudioSample, options: UseAudioPlayerOptions = {}) {
+export type AudioPlayerControls = {
+  isPlaying: boolean;
+  position: number;
+  duration: number;
+  volume: number;
+  play: () => Promise<void>;
+  stop: () => void;
+  restart: () => Promise<void>;
+  setVolume: (volume: number) => void;
+};
+
+export function useAudioPlayer(
+  sample: AudioSample,
+  options: UseAudioPlayerOptions = {},
+): AudioPlayerControls {
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);

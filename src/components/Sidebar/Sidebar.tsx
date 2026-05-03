@@ -6,12 +6,15 @@ import type {
   WallAssemblyInput,
   WallLayer,
 } from '../../types';
+import type { AudioPlayerControls } from '../../hooks/useAudioPlayer';
+import type { WallSoundSimulationData } from '../../lib/sound/simulationData';
 import { ComposerPanel } from './ComposerPanel';
 import { SettingsPanel } from './SettingsPanel';
 import { ListenPanel } from '../Sound';
 import type { SidebarTab } from './types';
 
 export type SidebarProps = {
+  audioPlayer: AudioPlayerControls;
   data?: WallAssemblyInput;
   activeTab: SidebarTab;
   materials: MaterialDefinition[];
@@ -34,11 +37,15 @@ export type SidebarProps = {
   onGroundShadowChange?: (settings: GroundShadowSettings) => void;
   soundMode: SoundMode;
   onSoundModeChange?: (mode: SoundMode) => void;
+  onSelectSample: (sampleId: string) => void;
+  selectedSampleId: string;
+  simulationData: WallSoundSimulationData;
   soundWave: SoundWaveSettings;
   onSoundWaveChange?: (settings: SoundWaveSettings) => void;
 };
 
 export function Sidebar({
+  audioPlayer,
   data,
   activeTab,
   materials,
@@ -53,6 +60,9 @@ export function Sidebar({
   onGroundShadowChange,
   soundMode,
   onSoundModeChange,
+  onSelectSample,
+  selectedSampleId,
+  simulationData,
   soundWave,
   onSoundWaveChange,
 }: SidebarProps) {
@@ -83,9 +93,12 @@ export function Sidebar({
       ) : null}
       {activeTab === 'simulator' ? (
         <ListenPanel
-          data={data}
+          audioPlayer={audioPlayer}
           listenMode={soundMode}
           onListenModeChange={onSoundModeChange}
+          onSelectSample={onSelectSample}
+          selectedSampleId={selectedSampleId}
+          simulationData={simulationData}
           soundWave={soundWave}
         />
       ) : null}

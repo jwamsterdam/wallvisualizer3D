@@ -1,7 +1,7 @@
 import type { ListenMode } from '../types';
 
 export const listenModeOptions: Array<{ value: ListenMode; label: string }> = [
-  { value: 'source', label: 'Bron' },
-  { value: 'existing', label: 'Huidige muur' },
-  { value: 'new', label: 'Nieuwe muur' },
+  { value: 'source', label: 'Origineel' },
+  { value: 'existing', label: 'Door huidige muur' },
+  { value: 'new', label: 'Door voorzetwand' },
 ];

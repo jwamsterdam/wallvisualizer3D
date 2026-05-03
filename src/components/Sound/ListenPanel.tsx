@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { audioSamples } from '../../data/audioSamples';
-import { useAudioPlayer } from '../../hooks/useAudioPlayer';
-import { simulateConstruction } from '../../lib/sound/acoustics';
+import type { AudioPlayerControls } from '../../hooks/useAudioPlayer';
 import { designFirFilter } from '../../lib/sound/fir';
-import { mapTlToPlaybackEq, normalizePlaybackMappingForAudition } from '../../lib/sound/playbackMapping';
-import { assemblyToSoundConstructions } from '../../lib/sound/wallAdapter';
-import type { ListenMode, SoundWaveSettings, WallAssemblyInput } from '../../types';
+import type { WallSoundSimulationData } from '../../lib/sound/simulationData';
+import type { ListenMode, SoundWaveSettings } from '../../types';
 import { AudioSamplePicker } from './AudioSamplePicker';
 import { AudioTransportControls } from './AudioTransportControls';
 import { ComparableVolumeControl } from './ComparableVolumeControl';
@@ -14,33 +12,24 @@ import { PlaybackDebugPanel } from './PlaybackDebugPanel';
 import { SoundEqDisplay } from './SoundEqDisplay';
 
 type ListenPanelProps = {
-  data?: WallAssemblyInput;
+  audioPlayer: AudioPlayerControls;
   listenMode: ListenMode;
   onListenModeChange?: (mode: ListenMode) => void;
+  onSelectSample: (sampleId: string) => void;
+  selectedSampleId: string;
+  simulationData: WallSoundSimulationData;
   soundWave: SoundWaveSettings;
 };
 
-export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }: ListenPanelProps) {
-  const [selectedSampleId, setSelectedSampleId] = useState(audioSamples[0]?.id ?? '');
-  const [autoPlayRequestId, setAutoPlayRequestId] = useState(0);
-  const selectedSample = useMemo(
-    () => audioSamples.find((sample) => sample.id === selectedSampleId) ?? audioSamples[0],
-    [selectedSampleId],
-  );
-  const simulationData = useMemo(() => {
-    const constructions = assemblyToSoundConstructions(data);
-    const existingResult = simulateConstruction(constructions.existing);
-    const nextResult = simulateConstruction(constructions.next);
-    const existingMapping = mapTlToPlaybackEq(existingResult);
-    const nextMapping = mapTlToPlaybackEq(nextResult);
-
-    return {
-      existingResult,
-      nextResult,
-      existingAuditionMapping: normalizePlaybackMappingForAudition(existingMapping),
-      nextAuditionMapping: normalizePlaybackMappingForAudition(nextMapping, existingMapping),
-    };
-  }, [data]);
+export function ListenPanel({
+  audioPlayer,
+  listenMode,
+  onListenModeChange,
+  onSelectSample,
+  selectedSampleId,
+  simulationData,
+  soundWave,
+}: ListenPanelProps) {
   const inspectedResult =
     listenMode === 'new' ? simulationData.nextResult : simulationData.existingResult;
   const inspectedPlaybackMapping =
@@ -51,17 +40,6 @@ export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }:
     () => designFirFilter(inspectedPlaybackMapping, 48000, 129),
     [inspectedPlaybackMapping],
   );
-  const player = useAudioPlayer(selectedSample, {
-    existingMapping: simulationData.existingAuditionMapping,
-    nextMapping: simulationData.nextAuditionMapping,
-    mode: listenMode,
-    autoPlayRequestId,
-  });
-
-  const handleSelectSample = (sampleId: string) => {
-    setSelectedSampleId(sampleId);
-    setAutoPlayRequestId((requestId) => requestId + 1);
-  };
 
   return (
     <div className="sidebar-tab-panel listen-panel" role="tabpanel" aria-label="Luisteren">
@@ -69,8 +47,8 @@ export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }:
         <h3>Muziek kiezen</h3>
         <AudioSamplePicker
           samples={audioSamples}
-          selectedSampleId={selectedSample.id}
-          onSelectSample={handleSelectSample}
+          selectedSampleId={selectedSampleId}
+          onSelectSample={onSelectSample}
         />
       </section>
 
@@ -83,14 +61,17 @@ export function ListenPanel({ data, listenMode, onListenModeChange, soundWave }:
           }}
         />
         <AudioTransportControls
-          isPlaying={player.isPlaying}
-          position={player.position}
-          duration={player.duration}
-          onPlay={() => void player.play()}
-          onStop={player.stop}
-          onRestart={() => void player.restart()}
+          isPlaying={audioPlayer.isPlaying}
+          position={audioPlayer.position}
+          duration={audioPlayer.duration}
+          onPlay={() => void audioPlayer.play()}
+          onStop={audioPlayer.stop}
+          onRestart={() => void audioPlayer.restart()}
         />
-        <ComparableVolumeControl volume={player.volume} onVolumeChange={player.setVolume} />
+        <ComparableVolumeControl
+          volume={audioPlayer.volume}
+          onVolumeChange={audioPlayer.setVolume}
+        />
       </section>
 
       <section className="listen-section listen-section--muted">

@@ -98,12 +98,82 @@ h1 {
 }
 
 .canvas-shell {
+  position: relative;
   min-height: 0;
   height: 100%;
   overflow: hidden;
   border: 1px solid #c6d0d8;
   border-radius: 8px;
   background: #f3f6f8;
+}
+
+.viewport-mini-player {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  width: min(450px, calc(100% - 24px));
+  padding: 4px;
+  border: 1px solid rgb(198 208 216 / 88%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 82%);
+  box-shadow: 0 14px 36px rgb(29 37 45 / 12%);
+  backdrop-filter: blur(12px);
+}
+
+.viewport-player-row,
+.viewport-listen-switch {
+  display: grid;
+  gap: 4px;
+}
+
+.viewport-player-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.viewport-listen-switch {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.viewport-mini-player select,
+.viewport-mini-player button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 7px;
+  border: 0;
+  border-radius: 6px;
+  color: #41505e;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.12;
+  text-align: center;
+}
+
+.viewport-mini-player select {
+  appearance: none;
+  padding-right: 26px;
+  text-align: left;
+  background-color: rgb(255 255 255 / 78%);
+  background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%231D252D' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+}
+
+.viewport-player-row button {
+  padding-inline: 11px;
+  color: #25313d;
+  background: #e9eef2;
+}
+
+.viewport-listen-switch button.active {
+  color: #ffffff;
+  background: #25313d;
 }
 
 .legend-panel {
@@ -520,14 +590,16 @@ h1 {
 
 .listen-mode-toggle button {
   min-height: 32px;
-  padding: 0 7px;
+  padding: 4px 7px;
   border: 0;
   border-radius: 6px;
   color: #41505e;
   background: transparent;
   cursor: pointer;
   font: inherit;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.12;
 }
 
 .listen-mode-toggle button.active {
@@ -853,13 +925,15 @@ h1 {
 
 .sound-toggle button {
   min-height: 32px;
-  padding: 0 7px;
+  padding: 4px 7px;
   border: 0;
   border-radius: 6px;
   color: #41505e;
   background: transparent;
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.12;
 }
 
 .sound-toggle button.active {
