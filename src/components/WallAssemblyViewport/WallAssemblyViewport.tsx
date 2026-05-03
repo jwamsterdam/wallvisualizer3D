@@ -1204,7 +1204,7 @@ export function WallAssemblyViewport({
       shadows
       dpr={isMobileViewport ? [0.75, 1.15] : [1, 1.6]}
       gl={{
-        antialias: !isMobileViewport,
+        antialias: true,
         powerPreference: 'high-performance',
       }}
       onPointerDown={(event) => {
