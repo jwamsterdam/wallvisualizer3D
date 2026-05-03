@@ -38,7 +38,7 @@ function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
 function App() {
   const [wallData, setWallData] = useState<WallAssemblyInput>(demoWall);
   const [activeTab, setActiveTab] = useState<SidebarTab>('composer');
-  const [showLabels, setShowLabels] = useState(true);
+  const [showLabels, setShowLabels] = useState(false);
   const [groundShadow, setGroundShadow] = useState<GroundShadowSettings>({
     opacity: 0.2,
     xOffset: -3.1,
